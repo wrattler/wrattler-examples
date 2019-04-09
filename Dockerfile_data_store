@@ -1,0 +1,5 @@
+FROM wrattler/wrattler_data_store:v0.1
+
+ENV FLASK_APP app.py
+EXPOSE 7102
+CMD ["python3","app.py"]

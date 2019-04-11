@@ -1,9 +1,18 @@
 # wrattler-examples
 Easy-to-setup local deployment of the Wrattler notebook, using pre-built docker images pulled from dockerhub. 
 
-To build and run (assuming you have Docker and docker-compose installed);
+## Local setup
+
+To run locally, the various components of Wrattler run in their own *Docker* containers.  To install Docker, follow the instructions [here](https://www.docker.com/products/docker-desktop).  You also need *docker-compose* which should already be installed with Docker if you are using Windows or OSX.  For Ubuntu, this can be installed following the instructions [here](https://linuxize.com/post/how-to-install-and-use-docker-compose-on-ubuntu-18-04/).
+
+To build and run:
 ```
 docker-compose build
 docker-compose up
 ```
 And you should be able to access Wrattler by pointing your browswer to ```localhost:8080```.
+
+Once you have finished, you can stop the docker containers by running (from this directory):
+```
+docker-compose down
+```

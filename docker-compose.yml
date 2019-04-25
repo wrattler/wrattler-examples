@@ -45,6 +45,18 @@ services:
     networks:
     - wrattler_nw
 
+  wrattler_racket_service:
+    container_name: wrattler_wrattler_racket_service_1
+    build:
+      context: .
+      dockerfile: Dockerfile_racket_service
+    ports:
+    - "7104:7104"
+    environment:
+      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    networks:
+    - wrattler_nw
+
   wrattler_data_store:
     container_name: wrattler_wrattler_data_store_1
     build:

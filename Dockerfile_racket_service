@@ -1,0 +1,5 @@
+FROM wrattler/wrattler_racket_service:v0.1
+
+EXPOSE 7104
+
+CMD ["./start-racket-service"]

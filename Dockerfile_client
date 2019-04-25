@@ -1,3 +1,5 @@
 FROM wrattler/wrattler_client:v0.1
 EXPOSE 8080
+ADD ./public /app
+RUN yarn build
 CMD ["http-server","./build"]

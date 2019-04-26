@@ -1,3 +1,3 @@
-FROM wrattler/wrattler_client:v0.1
+FROM wrattler/wrattler_client:v0.2
 EXPOSE 8080
 CMD ["http-server","./build","-c-1"]

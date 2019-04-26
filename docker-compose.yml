@@ -18,7 +18,8 @@ services:
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
-
+    volumes:
+      - ./public:/app/build/public
 
   wrattler_python_service:
     container_name: wrattler_wrattler_python_service_1

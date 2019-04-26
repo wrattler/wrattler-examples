@@ -12,6 +12,12 @@ docker-compose up
 ```
 And you should be able to access Wrattler by pointing your browswer to ```localhost:8080```.
 
+The local directory ```public/``` containing example markdown files is mounted as ```build/public/``` on the docker container, so you can edit files locally in this directory, and view them in your browser (may need to reload the page) at 
+```http://localhost:8080/?public/<markdownfilename>```.
+
+For example ```public/welcome.md``` can be seen in your browser at ```http://localhost:8080/?public/welcome```.
+
+
 Once you have finished, you can stop the docker containers by running (from this directory):
 ```
 docker-compose down

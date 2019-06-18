@@ -64,6 +64,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_data_store
+    environment:
+      - WRATTLER_LOCAL_STORAGE=True
     ports:
     - "7102:7102"
     networks:

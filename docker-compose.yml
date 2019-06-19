@@ -20,7 +20,7 @@ services:
      - RACKETSERVICE_URI=http://localhost:7104
      - DATASTORE_URI=http://localhost:7102
     volumes:
-      - ./resources:/app/build/resources
+      - ./resources:/app/public/resources
 
   wrattler_python_service:
     container_name: wrattler_wrattler_python_service_1
@@ -34,6 +34,8 @@ services:
      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw
+    volumes:
+    - ./resources:/app/resources
 
   wrattler_r_service:
     container_name: wrattler_wrattler_r_service_1
@@ -46,6 +48,8 @@ services:
       - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw
+    volumes:
+    - ./resources:/app/resources
 
   wrattler_racket_service:
     container_name: wrattler_wrattler_racket_service_1
@@ -58,6 +62,8 @@ services:
       - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw
+    volumes:
+    - ./resources:/app/resources
 
   wrattler_data_store:
     container_name: wrattler_wrattler_data_store_1

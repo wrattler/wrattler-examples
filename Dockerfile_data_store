@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_data_store:v0.2
+FROM wrattler/wrattler_data_store:v0.3
 ENV WRATTLER_LOCAL_DATASTORE True
 ENV FLASK_APP app.py
 EXPOSE 7102

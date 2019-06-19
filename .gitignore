@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.RData
+.Rhistory
+# emacs autosave files
+*~
+*.ipynb
+resources/.ipynb_checkpoints

@@ -1,0 +1,46 @@
+{
+  "name": "@jupyterlab/wrattler-extension",
+  "version": "0.1.0",
+  "description": "A renderer for Wrattler in JupyterLab",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "homepage": "https://github.com/my_name/myextension",
+  "bugs": {
+    "url": "https://github.com/my_name/myextension/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": "AIDA-Turing",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/my_name/myextension.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "prepare": "npm run clean && npm run build",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^0.19.1",
+    "@jupyterlab/rendermime-interfaces": "^1.2.1",
+    "@phosphor/widgets": "^1.6.0",
+    "@types/node": "^10.12.20",
+    "axios": "^0.18.0"
+  },
+  "devDependencies": {
+    "rimraf": "^2.6.1",
+    "typescript": "~3.1.1"
+  },
+  "jupyterlab": {
+    "mimeExtension": true
+  }
+}

@@ -77,15 +77,6 @@ services:
     networks:
     - wrattler_nw
 
-  wrattler_jupyterlab:
-    container_name: wrattler_wrattler_jupyterlab_1
-    build:
-      context: .
-      dockerfile: Dockerfile_jupyterlab
-    ports:
-     - "8889:8889"
-    volumes:
-      - ./resources:/public
 
 networks:
   wrattler_nw:

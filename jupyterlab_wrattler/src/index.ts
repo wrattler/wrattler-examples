@@ -20,7 +20,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Construct a new xkcd widget.
    */
   constructor(options: IRenderMime.IRendererOptions) {
-    
+
     function getRandomInt(max:number) {
       return Math.floor(Math.random() * Math.floor(max));
     }
@@ -31,11 +31,11 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.wrattlerClass = wrattler
     this.id = 'paperparent'.concat(index.toString());
     this.title.label = 'Wrattler';
-    this.title.closable = true;      
-    this.addClass(CSS_CLASS); 
+    this.title.closable = true;
+    this.addClass(CSS_CLASS);
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
-    this._mimeType = options.mimeType; 
+    this._mimeType = options.mimeType;
   }
 
   /**
@@ -44,7 +44,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   readonly img: HTMLImageElement;
   private _mimeType: string;
   private wrattlerClass:PrivateWrattler;
-  
+
   /**
    * Dispose of the widget.
    */
@@ -56,8 +56,8 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    let content = model.data[this._mimeType] as string ; 
-    
+    let content = model.data[this._mimeType] as string ;
+
     return new Promise<void> ((resolve)=>
     {
       setTimeout(()=>{
@@ -106,17 +106,17 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 export default extensions;
 
 class PrivateWrattler {
-  
+
   elementID: string
 
   constructor(index:number) {
     this.elementID = "paper".concat(index.toString())
   }
 
-  createNode(): HTMLElement { 
+  createNode(): HTMLElement {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
-    wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
+    wrattlerScript.setAttribute("src","https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js");
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
     let wrattlerParentDiv: HTMLDivElement = document.createElement('div');

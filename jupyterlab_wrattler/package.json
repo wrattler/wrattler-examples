@@ -30,7 +30,6 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^0.19.1",
     "@jupyterlab/rendermime-interfaces": "^1.2.1",
     "@phosphor/widgets": "^1.6.0",
     "@types/node": "^10.12.20",

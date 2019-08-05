@@ -116,7 +116,9 @@ class PrivateWrattler {
   createNode(): HTMLElement {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
-    wrattlerScript.setAttribute("src","https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js");
+      //      wrattlerScript.setAttribute("src","https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js");
+      console.log(process.env.CLIENT_URL);
+    wrattlerScript.setAttribute("src",process.env.CLIENT_URL);
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
     let wrattlerParentDiv: HTMLDivElement = document.createElement('div');

@@ -20,7 +20,8 @@ services:
      - RACKETSERVICE_URI=http://localhost:7104
      - DATASTORE_URI=http://localhost:7102
     volumes:
-      - ./resources:/app/public/resources
+      - /home/ec2-user/SageMaker:/app/public/resources
+#      - ./resources:/app/public/resources
 
   wrattler_python_service:
     container_name: wrattler_wrattler_python_service_1
@@ -35,7 +36,8 @@ services:
     networks:
     - wrattler_nw
     volumes:
-    - ./resources:/app/resources
+      - /home/ec2-user/SageMaker:/app/public/resources
+#    - ./resources:/app/resources
 
   wrattler_r_service:
     container_name: wrattler_wrattler_r_service_1

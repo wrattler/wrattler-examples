@@ -15,7 +15,7 @@ services:
     networks:
     - wrattler_nw
     environment:
-     - PYTHONSERVICE_URI=http://localhost:7101
+     - PYTHONSERVICE_URI=https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101
      - RSERVICE_URI=http://localhost:7103
      - RACKETSERVICE_URI=http://localhost:7104
      - DATASTORE_URI=http://localhost:7102

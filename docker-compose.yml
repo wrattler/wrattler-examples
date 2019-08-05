@@ -51,7 +51,8 @@ services:
     networks:
     - wrattler_nw
     volumes:
-    - ./resources:/app/resources
+      - /home/ec2-user/SageMaker:/app/public/resources
+#    - ./resources:/app/resources
 
   wrattler_racket_service:
     container_name: wrattler_wrattler_racket_service_1
@@ -65,7 +66,8 @@ services:
     networks:
     - wrattler_nw
     volumes:
-    - ./resources:/app/resources
+      - /home/ec2-user/SageMaker:/app/public/resources
+##  - ./resources:/app/resources
 
   wrattler_data_store:
     container_name: wrattler_wrattler_data_store_1

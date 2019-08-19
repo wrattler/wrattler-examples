@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_python_service:v0.4
+FROM wrattler/wrattler_python_service_sagemaker:v0.1
 
 ADD . /app
 WORKDIR /app

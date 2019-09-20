@@ -11,7 +11,7 @@ docker-compose build
 docker-compose up
 ```
 And you should be able to:
-* Access the Wrattler client diretly by pointing your browswer to ```localhost:8080```, or
+* Access the Wrattler client directly by pointing your browswer to ```localhost:8080```, or
 * Access Wrattler via Jupyter lab by going to ```localhost:8889/?token=<token>``` where the ```<token>``` can be found in the console output from the ```docker-compose up``` command.
 
 Using Jupyter lab enables you to load files with a ```.wrattler``` extension in Wrattler, and save changes.

@@ -1,0 +1,18 @@
+# Scenicness Crime Analysis
+```python
+import pandas as pd
+
+# load crime data
+crime_df = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv")
+
+# load predictions made by neural network trained on Scenic-or-not data
+predictions_df = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
+predictions_df = predictions_df[predictions_df["year"] == 2015] # filter predictions for 2015
+
+# load indices of deprivation
+dep_indices_df = pd.read_csv("resources/ID 2015 for London exported.csv")
+# columns to remove - "Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"
+
+# load population density 
+pop_df = pd.read_csv("resources/lsoa-data.csv", encoding = "latin")
+```

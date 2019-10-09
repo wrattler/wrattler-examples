@@ -11,8 +11,21 @@ predictions_df = predictions_df[predictions_df["year"] == 2015] # filter predict
 
 # load indices of deprivation
 dep_indices_df = pd.read_csv("resources/ID 2015 for London exported.csv")
-# columns to remove - "Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"
+dep_indices_df = dep_indices_df.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"]) # remove what we're hoping to predicting
 
 # load population density 
-pop_df = pd.read_csv("resources/lsoa-data.csv", encoding = "latin")
+pop_df = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
 ```
+```python
+# Join data into one table on Lower Super Output Area (LSOA)
+
+# LSOA column name in crime_df: LSOA Code
+# LSOA column name in predictions_df: LSOA_code # since we earlier filtered for just 2015, assume we can use the 2011 LSOA convention
+# LSOA column name in dep_indices_df: LSOA code (2011)
+# LSOA column name in pop_df: Lower Super Output Area # this is the data taken from Current LSOA boundaries post-2011 (so we can assume this is 2011 LSOA convention)
+
+```
+Questions/Comments:
+
+* Are the LSOAs in the crime data according to the current LSOA (used in 2011) or are they the LSOA at that time (i.e. what it was in 2008)
+* Since we earlier filtered for just 2015 in the predictions, assume we can use the 2011 LSOA convention (?)

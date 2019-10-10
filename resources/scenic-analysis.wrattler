@@ -1,20 +1,67 @@
 # Scenicness Crime Analysis
+
+
+
+
 ```python
 import pandas as pd
 
 # load crime data
-crime_df = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv")
+# crime_df = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv")
 
-# load predictions made by neural network trained on Scenic-or-not data
-predictions_df = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
-predictions_df = predictions_df[predictions_df["year"] == 2015] # filter predictions for 2015
+# # load predictions made by neural network trained on Scenic-or-not data
+# predictions_df = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
+# predictions_df = predictions_df[predictions_df["year"] == 2015] # filter predictions for 2015
 
-# load indices of deprivation
-dep_indices_df = pd.read_csv("resources/ID 2015 for London exported.csv")
-dep_indices_df = dep_indices_df.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"]) # remove what we're hoping to predicting
+# # load indices of deprivation
+# dep_indices_df = pd.read_csv("resources/ID 2015 for London exported.csv")
+# dep_indices_df = dep_indices_df.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"]) # remove what we're hoping to predicting
 
-# load population density 
-pop_df = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
+# # load population density 
+# pop_df = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
+```
+
+
+
+
+## Crime data
+
+The first dataset we import is the [MPS LSOA Level Crime (historic)](https://data.london.gov.uk/dataset/recorded_crime_summary) dataset.
+This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
+
+Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
+
+
+
+
+
+```python
+%global utils.py
+import pandas as pd
+
+crime_df = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"]) # we'll be joining the different datasets on LSOA
+
+# expand crime category names so we can flatten out categories later
+crime_df["Major Category"] = crime_df["Major Category"].apply(rename_category_for_flattening, category_parent="major")
+crime_df["Minor Category"] = crime_df["Minor Category"].apply(rename_category_for_flattening, category_parent="minor")
+
+# major crime types are parents to minor categories
+major_counts_per_LSOA_per_month = crime_df.groupby(by=["LSOA Code", "Major Category"]).sum().astype('float').reset_index().rename(columns={"Major Category":"category"})
+
+minor_counts_per_LSOA_per_month = crime_df.drop(columns="Major Category").rename(columns={"Minor Category":"category"})
+
+# count crimes regardless of category for each LSOA (and check we have recordings on a monthly basis)
+total_counts_per_LSOA_per_month = crime_df.groupby(by=["LSOA Code"]).sum().astype('float')
+assert sequential_months(set(total_counts_per_LSOA_per_month.columns)), "Unexpected number of months. Data may be missing for particular months"
+total_counts_per_LSOA_per_month["category"] = "total_count"
+total_counts_per_LSOA_per_month = total_counts_per_LSOA_per_month.reset_index() # now joinable
+
+counts_per_LSOA_per_month = pd.concat([major_counts_per_LSOA_per_month, minor_counts_per_LSOA_per_month, total_counts_per_LSOA_per_month])
+
+# reduced previous count table to an overview aggregating across the months and calculate overall total counts, number of months and mean monthly crime count
+counts_per_LSOA = counts_per_LSOA_per_month.set_index(["LSOA Code", "category"]).apply(lambda x : x.sum(), axis=1).rename("count").reset_index()
+counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index(["LSOA Code", "category"]).apply(lambda x : x.count(), axis=1).values
+counts_per_LSOA["mean_monthly_count"] = counts_per_LSOA_per_month.set_index(["LSOA Code", "category"]).apply(lambda x : x.mean(), axis=1).values
 ```
 ```python
 # Join data into one table on Lower Super Output Area (LSOA)
@@ -23,9 +70,16 @@ pop_df = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
 # LSOA column name in predictions_df: LSOA_code # since we earlier filtered for just 2015, assume we can use the 2011 LSOA convention
 # LSOA column name in dep_indices_df: LSOA code (2011)
 # LSOA column name in pop_df: Lower Super Output Area # this is the data taken from Current LSOA boundaries post-2011 (so we can assume this is 2011 LSOA convention)
-
 ```
+
+
+
+
 Questions/Comments:
 
 * Are the LSOAs in the crime data according to the current LSOA (used in 2011) or are they the LSOA at that time (i.e. what it was in 2008)
 * Since we earlier filtered for just 2015 in the predictions, assume we can use the 2011 LSOA convention (?)
+
+
+
+

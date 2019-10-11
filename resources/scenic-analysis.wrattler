@@ -24,11 +24,11 @@ Although most of the subsequent analysis will be implemented in R, Wrattler allo
 
 
 
+
 ```python
+%global constants.py
 %global utils.py
 import pandas as pd
-
-JOINING_KEY = "lsoa_code"
 
 crime_data = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"])
 crime_data.rename(columns={"LSOA Code": JOINING_KEY}, inplace=True)

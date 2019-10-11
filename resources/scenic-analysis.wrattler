@@ -59,22 +59,80 @@ counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index
 if counts_per_LSOA.isnull().values.any():
     print("Nan values found in dataframe")
 ```
-```python
-# Join data into one table on Lower Super Output Area (LSOA)
 
-# LSOA column name in crime_df: LSOA Code
-# LSOA column name in predictions_df: LSOA_code # since we earlier filtered for just 2015, assume we can use the 2011 LSOA convention
-# LSOA column name in dep_indices_df: LSOA code (2011)
-# LSOA column name in pop_df: Lower Super Output Area # this is the data taken from Current LSOA boundaries post-2011 (so we can assume this is 2011 LSOA convention)
+
+
+
+## Indices of deprivation data
+
+```python
+depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
+
+# remove indices directly relating to crime
+depriv_indices.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"], inplace=True)
+
+depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
+depriv_indices.rename(columns={"lsoa_code_2011": JOINING_KEY}, inplace=True)
+
+if depriv_indices.isnull().values.any():
+    print("Nan values found in dataframe")
 ```
+
+
+
+
+## Population density data
+
+
+
+
+```python
+population_density = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
+
+population_density.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True)
+population_density.rename(columns={"lower_super_output_area": JOINING_KEY}, inplace=True)
+
+if population_density.isnull().values.any():
+    print("Nan values found\n")
+    population_density.dropna(inplace=True)
+```
+
+
+
+
+## Predictions
+
+Lastly, we'll load in the 'scenicness' predictions that were made by Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+These predictions will be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
+
+
+
+```python
+predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
+
+predictions = predictions[predictions["year"] == 2015]
+predictions.rename(columns={"year":"prediction_year", "Predicted_Score":"predicted_score_nn", "LSOA_code": JOINING_KEY}, inplace=True)
+```
+
+
+
+
+
 
 
 
 
 Questions/Comments:
 
+* Remember to maybe filter for 2015 in crime_df
 * Are the LSOAs in the crime data according to the current LSOA (used in 2011) or are they the LSOA at that time (i.e. what it was in 2008)
 * Since we earlier filtered for just 2015 in the predictions, assume we can use the 2011 LSOA convention (?)
+
+
+
+
+
 
 
 

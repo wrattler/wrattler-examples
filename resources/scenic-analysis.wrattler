@@ -22,13 +22,15 @@ Although most of the subsequent analysis will be implemented in R, Wrattler allo
 
 
 
+
+
 ```python
 %global utils.py
 import pandas as pd
 
 JOINING_KEY = "lsoa_code"
 
-crime_data = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"]) # we'll be joining the different datasets on LSOA
+crime_data = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"])
 crime_data.rename(columns={"LSOA Code": JOINING_KEY}, inplace=True)
 
 # expand crime category names so we can flatten out categories later
@@ -52,6 +54,7 @@ counts_per_LSOA_per_month = pd.concat([major_counts_per_LSOA_per_month, minor_co
 counts_per_LSOA = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.sum(), axis=1).rename("crime_count").reset_index()
 counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.count(), axis=1).values
 counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.mean(), axis=1).values
+counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 
 if counts_per_LSOA.isnull().values.any():
     print("Nan values found in dataframe")

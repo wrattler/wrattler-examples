@@ -1,16 +1,16 @@
 import datetime
 import dateutil.rrule
 
-
 def check_import():
     print("Imported!")
     return 0
 
-def rename_category_for_flattening(category, category_parent):
-    """
-    #TODO: documentation
-    """
-    return category_parent + "_" + category.lower().replace(" ", "_")
+def rename_category_for_flattening(category, category_parent=""):
+        
+    if category_parent == "":
+        return category.lower().replace(" ", "_").replace("/", "").replace("(", "").replace(")", "").replace(",", "").replace(";", "_").replace("-", "")
+    
+    return category_parent + "_" + category.lower().replace(" ", "_").replace("/", "")
 
 def sequential_months(dates):
     """

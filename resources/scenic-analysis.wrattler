@@ -121,13 +121,12 @@ if df.isnull().values.any():
     df.dropna(inplace=True)
 ```
 ```r
-install.packages("AER")
+
 library(AER)
 
+setwd("resources")
 
-setwd("../app/resources")
-
-df = read.csv("joined_crime_datasets_11_10_19.csv")
+df = read.csv("ID 2015 for London exported.csv")
 #crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
 
 #Run Poisson Model

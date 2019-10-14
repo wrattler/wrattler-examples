@@ -1,12 +1,14 @@
 import datetime
 import dateutil.rrule
 
-def check_import():
-    print("Imported!")
-    return 0
-
 def rename_category_for_flattening(category, category_parent=""):
-        
+    """
+    Tidy name of passed category.
+    
+    :param category: string to be renamed (namely, a category of crime)
+    :param category_parent: optional string to insert at the beginning of the string (in addition to other edits)
+    :return: new string name for category passed
+    """
     if category_parent == "":
         return category.lower().replace(" ", "_").replace("/", "").replace("(", "").replace(")", "").replace(",", "").replace(";", "_").replace("-", "")
     
@@ -14,7 +16,10 @@ def rename_category_for_flattening(category, category_parent=""):
 
 def sequential_months(dates):
     """
-    #TODO: documentation
+    Check whether list of given dates is sequential. 
+    
+    :param dates: list of string representations of dates in format "%Y%m" (e.g. "201810" -> 2018, Oct)
+    :return: True if sequential
     """
     strt_dt = datetime.datetime.strptime(min(dates), "%Y%m")
     end_dt = datetime.datetime.strptime(max(dates), "%Y%m")

@@ -121,13 +121,13 @@ if df.isnull().values.any():
     df.dropna(inplace=True)
 ```
 ```r
-
+install.packages("AER")
 library(AER)
 
 setwd("resources")
 
-df = read.csv("ID 2015 for London exported.csv")
-#crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
+df = read.csv("crime_df_516bca099ea145f2840eea6385f0a17089c2bf1f_15_10_19.csv")
+crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
 
 #Run Poisson Model
 #summary(m1 <- glm(crime_count ~ predicted_score_nn, family="poisson", data=crime_subset_df))

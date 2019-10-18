@@ -23,6 +23,13 @@ crime_data.rename(columns={"LSOA Code": JOINING_KEY}, inplace=True)
 crime_data["Major Category"] = crime_data["Major Category"].apply(rename_category_for_flattening, category_parent="major")
 crime_data["Minor Category"] = crime_data["Minor Category"].apply(rename_category_for_flattening, category_parent="minor")
 
+# (for now) remove columns/dates that have nan values
+dates_df = crime_data[list(crime_data.columns)[3:]]
+nans = lambda df: df[df.isnull().any(axis=1)]
+nan_df = nans(dates_df)
+months_with_nans = list(set(nan_df.columns) - set(nan_df.dropna(axis="columns").columns))
+crime_data.drop(columns=months_with_nans, inplace=True)
+
 # major crime types are parents to minor categories
 major_counts_per_LSOA_per_month = crime_data.groupby(by=[JOINING_KEY, "Major Category"]).sum().astype('float').reset_index().rename(columns={"Major Category":"crime_category"})
 

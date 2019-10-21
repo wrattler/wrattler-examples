@@ -83,11 +83,12 @@
       mymap.locate({setView: true, maxZoom: 14});
       
       // add to map data of LSOA geo boundaries joined with scenic ratings
-      $.getJSON("lsoa_codes_geo_predictions.geojson", function(json){
-	var scenery_layer = L.geoJSON(json, {
-	  style: function (feature) {
+      $.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
+        console.log(json);
+        var scenery_layer = L.geoJSON(json, {
+          style: function (feature) {
 	    
-	    return {fillColor: percToColor(feature.properties.Predicted_Score, 2.16, 4.84), // hex color for boundary fill
+	    return {fillColor: percToColor(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
 		    weight: 1.1, // thickness of boundary lines
 		    opacity: 1, // opacity of boundary lines
 		    color: 'white', // colour of boundary lines
@@ -96,13 +97,41 @@
 	  }}).bindPopup(function (layer) {
 	    return layer.feature.properties.lsoa11nm;
 	  }).addTo(mymap);
-	
+
+        var crime_count_layer = L.geoJSON(json, {
+          style: function (feature) {
+	    
+            return {fillColor: percToColor(feature.properties.mean_monthly_crime_count, 0.9, 484), // hex color for boundary fill
+		    weight: 1.1, // thickness of boundary lines
+		    opacity: 1, // opacity of boundary lines
+		    color: 'white', // colour of boundary lines
+		    dashArray: '1', // dashing of boundary lines
+		    fillOpacity: 0.4}; // opacity of boundary areas
+	  }}).bindPopup(function (layer) {
+	    return layer.feature.properties.lsoa11nm;
+	  });
+
+        var pop_density_layer = L.geoJSON(json, {
+          style: function (feature) {
+	    
+            return {fillColor: percToColor(feature.properties.population_density_area_hectares_, 1.8, 1579.7), // hex color for boundary fill
+		    weight: 1.1, // thickness of boundary lines
+		    opacity: 1, // opacity of boundary lines
+		    color: 'white', // colour of boundary lines
+		    dashArray: '1', // dashing of boundary lines
+		    fillOpacity: 0.4}; // opacity of boundary areas
+	  }}).bindPopup(function (layer) {
+	    return layer.feature.properties.lsoa11nm;
+	  });
+        
 	// default display street map, optional add scenery ratings
 	var baseMaps = {
 	  "Open Street Map": map_layer
 	};
 	var overlapMaps = {
-	  "Scenery Ratings": scenery_layer
+	  "Scenery Ratings": scenery_layer,
+          "Crime Counts": crime_count_layer,
+          "Population Density": pop_density_layer
 	};
 	L.control.layers(baseMaps, overlapMaps).addTo(mymap);
       });

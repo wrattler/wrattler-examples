@@ -4,6 +4,8 @@
 
 The first dataset we import is the [MPS LSOA Level Crime (historic)](https://data.london.gov.uk/dataset/recorded_crime_summary) dataset.
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
+LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
+with areas ranging between 0.018 square km to 684 square km.
 
 Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
 
@@ -65,11 +67,13 @@ In addition, to control for population density as a factor influencing crime rat
 
 
 
+
 ```python
 depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
 
-# make sure to remove all indices 'directly' relating to crime
-depriv_indices.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"], inplace=True)
+# make sure to remove all indices 'directly' relating to crime, and columns containing rank or decile extra info
+drop_cols = [c for s in ["crime", "rank", "decile"] for c in depriv_indices.columns if s in c.lower()]
+depriv_indices.drop(columns=drop_cols, inplace=True)
 
 depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
 depriv_indices.rename(columns={"lsoa_code_2011": JOINING_KEY}, inplace=True)
@@ -81,9 +85,8 @@ if depriv_indices.isnull().values.any():
 ```python
 population_density = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
 
-population_density.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True)
-population_density.rename(columns={"lower_super_output_area": JOINING_KEY}, inplace=True)
-population_density = population_density[["lsoa_code", "population_density_area_hectares_"]]
+population_density.rename(columns={"Lower Super Output Area": JOINING_KEY, "Population Density;Area (Hectares);": "population_density_area_hectares"}, inplace=True)
+population_density = population_density[["lsoa_code", "population_density_area_hectares"]]
 
 if population_density.isnull().values.any():
     print("Nan values found\n")

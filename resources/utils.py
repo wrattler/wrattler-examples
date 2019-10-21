@@ -3,7 +3,7 @@ import dateutil.rrule
 
 def rename_category_for_flattening(category, category_parent=""):
     """
-    Tidy name of passed category.
+    Tidy name of passed category by removing extraneous characters such as '_' and '-'.
     
     :param category: string to be renamed (namely, a category of crime)
     :param category_parent: optional string to insert at the beginning of the string (in addition to other edits)

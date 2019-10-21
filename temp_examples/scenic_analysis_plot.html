@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <title>Scenicness Ratings of London</title>
+    <link rel="stylesheet"
+	  href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+	  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+	  crossorigin=""/>
+    
+    <style>
+      body {
+	  margin: 0;
+	  padding: 0;
+      }
+
+      html, body, #mapid {
+	  height: 100%;
+	  width: 100vw;
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+    <div id="mapid"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+	    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+	    crossorigin=""></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+	    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+	    crossorigin="anonymous"></script>
+    
+    <script>
+      
+      function percToColor(perc, min, max) {
+	/**
+	 * Min-max feature scaling: scale a percentage (e.g. scenic rating) to be between 0-100%
+	 * and return according hex colour, rendering from red to yellow to green. 
+	 *
+	 * @param  {Number} perc Percentage to scale
+	 * @param  {Number} min  Minimum perc value
+	 * @param  {Number} max  Maximum perc value
+	 * @return {String}      Scaled hex color
+	 */
+	if(arguments.length < 3)
+	  throw "Insufficient number of parameters passed.";
+	
+	var a = 0, b = 100;
+	perc = a + (perc - min)*(b-a)/(max - min);
+	
+	var r, g, b = 0;
+	if(perc < 50) {
+	  r = 255;
+	  g = Math.round(5.1 * perc);
+	}
+	else {
+	  g = 255;
+	  r = Math.round(510 - 5.10 * perc);
+	}
+	var h = r * 0x10000 + g * 0x100 + b * 0x1;
+	return '#' + ('000000' + h.toString(16)).slice(-6);
+      }
+      
+      var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+      var map_layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?', {attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'}).addTo(mymap);
+      
+      // show where user currently is on map
+      function onLocationFound(e) {
+	var radius = e.accuracy;
+	L.marker(e.latlng).addTo(mymap)
+	  .bindPopup('You are within ' + radius + ' metres from this point').openPopup();
+	L.circle(e.latlng, radius).addTo(mymap);
+      }
+      mymap.on('locationfound', onLocationFound);
+      
+      // centre the map according to where user currently is
+      mymap.locate({setView: true, maxZoom: 14});
+      
+      // add to map data of LSOA geo boundaries joined with scenic ratings
+      $.getJSON("lsoa_codes_geo_predictions.geojson", function(json){
+	var scenery_layer = L.geoJSON(json, {
+	  style: function (feature) {
+	    
+	    return {fillColor: percToColor(feature.properties.Predicted_Score, 2.16, 4.84), // hex color for boundary fill
+		    weight: 1.1, // thickness of boundary lines
+		    opacity: 1, // opacity of boundary lines
+		    color: 'white', // colour of boundary lines
+		    dashArray: '1', // dashing of boundary lines
+		    fillOpacity: 0.4}; // opacity of boundary areas
+	  }}).bindPopup(function (layer) {
+	    return layer.feature.properties.lsoa11nm;
+	  }).addTo(mymap);
+	
+	// default display street map, optional add scenery ratings
+	var baseMaps = {
+	  "Open Street Map": map_layer
+	};
+	var overlapMaps = {
+	  "Scenery Ratings": scenery_layer
+	};
+	L.control.layers(baseMaps, overlapMaps).addTo(mymap);
+      });
+      
+      </script>
+  </body>
+</html>

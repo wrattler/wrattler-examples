@@ -1,0 +1,160 @@
+# Testing the Broken Window hypothesis: are less scenic neighbourhoods linked to more crime?
+
+## Crime data
+
+The first dataset we import is the [MPS LSOA Level Crime (historic)](https://data.london.gov.uk/dataset/recorded_crime_summary) dataset.
+This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
+LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
+with areas ranging between 0.018 square km to 684 square km.
+
+Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
+
+
+
+
+
+```python
+%global constants.py
+%global utils.py
+import pandas as pd
+
+crime_data = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"])
+crime_data.rename(columns={"LSOA Code": JOINING_KEY}, inplace=True)
+
+# expand crime category names so we can flatten out categories later
+crime_data["Major Category"] = crime_data["Major Category"].apply(rename_category_for_flattening, category_parent="major")
+crime_data["Minor Category"] = crime_data["Minor Category"].apply(rename_category_for_flattening, category_parent="minor")
+
+# (for now) remove columns/dates that have nan values
+dates_df = crime_data[list(crime_data.columns)[3:]]
+nans = lambda df: df[df.isnull().any(axis=1)]
+nan_df = nans(dates_df)
+months_with_nans = list(set(nan_df.columns) - set(nan_df.dropna(axis="columns").columns))
+crime_data.drop(columns=months_with_nans, inplace=True)
+
+# major crime types are parents to minor categories
+major_counts_per_LSOA_per_month = crime_data.groupby(by=[JOINING_KEY, "Major Category"]).sum().astype('float').reset_index().rename(columns={"Major Category":"crime_category"})
+
+minor_counts_per_LSOA_per_month = crime_data.drop(columns="Major Category").rename(columns={"Minor Category":"crime_category"})
+
+# count crimes regardless of category for each LSOA (and check we have recordings on a monthly basis)
+total_counts_per_LSOA_per_month = crime_data.groupby(by=[JOINING_KEY]).sum().astype('float')
+assert sequential_months(set(total_counts_per_LSOA_per_month.columns)), "Unexpected number of months. Data may be missing for particular months"
+total_counts_per_LSOA_per_month["crime_category"] = "total_count"
+total_counts_per_LSOA_per_month = total_counts_per_LSOA_per_month.reset_index() # now joinable
+
+counts_per_LSOA_per_month = pd.concat([major_counts_per_LSOA_per_month, minor_counts_per_LSOA_per_month, total_counts_per_LSOA_per_month])
+
+# reduced previous count table to an overview aggregating across the months and calculate overall total counts, number of months and mean monthly crime count
+counts_per_LSOA = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.sum(), axis=1).rename("crime_count").reset_index()
+counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.count(), axis=1).values
+counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.mean(), axis=1).values
+counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
+```
+
+
+
+
+
+
+## Indices of deprivation & population density data
+
+To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
+In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
+
+
+
+
+
+
+```python
+depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
+
+# make sure to remove all indices 'directly' relating to crime, and columns containing rank or decile extra info
+drop_cols = [c for s in ["crime", "rank", "decile"] for c in depriv_indices.columns if s in c.lower()]
+depriv_indices.drop(columns=drop_cols, inplace=True)
+
+depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
+depriv_indices.rename(columns={"lsoa_code_2011": JOINING_KEY}, inplace=True)
+
+if depriv_indices.isnull().values.any():
+    print("Nan values found in dataframe")
+    depriv_indices.dropna(inplace=True)
+```
+```python
+population_density = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
+
+population_density.rename(columns={"Lower Super Output Area": JOINING_KEY, "Population Density;Area (Hectares);": "population_density_area_hectares"}, inplace=True)
+population_density = population_density[["lsoa_code", "population_density_area_hectares"]]
+
+if population_density.isnull().values.any():
+    print("Nan values found\n")
+    population_density.dropna(inplace=True)
+```
+
+
+
+
+
+
+## Scenic ratings
+
+Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
+
+
+
+
+
+
+
+
+
+```python
+predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
+
+predictions = predictions[predictions["year"] == 2015].drop(columns="year")
+predictions.rename(columns={"LSOA_code": JOINING_KEY, "Predicted_Score":"scenic_rating"}, inplace=True)
+
+if predictions.isnull().values.any():
+    print("Nan values found\n")
+    predictions.dropna(inplace=True)
+```
+
+
+
+
+
+
+## Combining the datasets
+
+
+
+
+
+
+
+
+
+
+
+```python
+df = pd.concat([depriv_indices.set_index(JOINING_KEY), 
+                population_density.set_index(JOINING_KEY), 
+                predictions.set_index(JOINING_KEY)], axis=1, sort=True)
+df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna()
+```
+```r
+install.packages("AER")
+library(AER)
+
+setwd("resources")
+
+df = read.csv("crime_df_516bca099ea145f2840eea6385f0a17089c2bf1f_15_10_19.csv")
+crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
+
+#Run Poisson Model
+#summary(m1 <- glm(crime_count ~ predicted_score_nn, family="poisson", data=crime_subset_df))
+```

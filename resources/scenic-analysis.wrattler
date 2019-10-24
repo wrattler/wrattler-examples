@@ -1,13 +1,4 @@
-# Scenicness Crime Analysis
-
-
-
-
-
-
-
-
-
+# Testing the Broken Window hypothesis: are less scenic neighbourhoods linked to more crime?
 
 ## Crime data
 
@@ -15,16 +6,6 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 
 Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -60,9 +41,6 @@ counts_per_LSOA = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_categ
 counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.count(), axis=1).values
 counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.mean(), axis=1).values
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
-
-if counts_per_LSOA.isnull().values.any():
-    print("Nan values found in dataframe")
 ```
 
 
@@ -70,10 +48,10 @@ if counts_per_LSOA.isnull().values.any():
 
 
 
+## Indices of deprivation & population density data
 
-
-
-## Indices of deprivation data
+To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
+In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
 
 
 
@@ -83,43 +61,18 @@ if counts_per_LSOA.isnull().values.any():
 ```python
 depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
 
-# remove indices directly relating to crime
+# make sure to remove all indices 'directly' relating to crime
 depriv_indices.drop(columns=["Crime Score", "Crime Rank (where 1 is most deprived)", "Crime Decile (where 1 is most deprived 10% of LSOAs)"], inplace=True)
 
 depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
 depriv_indices.rename(columns={"lsoa_code_2011": JOINING_KEY}, inplace=True)
-
-if depriv_indices.isnull().values.any():
-    print("Nan values found in dataframe")
 ```
-
-
-
-
-
-
-
-
-
-## Population density data
-
-
-
-
-
-
-
-
-
 ```python
 population_density = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
 
 population_density.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True)
 population_density.rename(columns={"lower_super_output_area": JOINING_KEY}, inplace=True)
-
-if population_density.isnull().values.any():
-    print("Nan values found\n")
-    population_density.dropna(inplace=True)
+population_density = population_density[["lsoa_code", "population_density_area_hectares_"]]
 ```
 
 
@@ -127,16 +80,10 @@ if population_density.isnull().values.any():
 
 
 
+## Scenic ratings
 
-
-
-## Predictions
-
-Lastly, we'll load in the 'scenicness' predictions that were made by Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
-These predictions will be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
-
-
-
+Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
 
 
 
@@ -146,9 +93,11 @@ These predictions will be made publicly available and the method has been discus
 ```python
 predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
 
-predictions = predictions[predictions["year"] == 2015]
-predictions.rename(columns={"year":"prediction_year", "Predicted_Score":"predicted_score_nn", "LSOA_code": JOINING_KEY}, inplace=True)
+predictions = predictions[predictions["year"] == 2015].drop(columns="year")
+predictions.rename(columns={"LSOA_code": JOINING_KEY, "Predicted_Score":"scenic_rating"}, inplace=True)
 ```
+
+
 
 
 
@@ -158,44 +107,28 @@ predictions.rename(columns={"year":"prediction_year", "Predicted_Score":"predict
 
 
 
-```python
-import pandas as pd
 
+
+
+```python
 df = pd.concat([depriv_indices.set_index(JOINING_KEY), 
                 population_density.set_index(JOINING_KEY), 
                 predictions.set_index(JOINING_KEY)], axis=1, sort=True)
 df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna()
+
+if df.isnull().values.any():
+    print("Nan values found\n")
+    df.dropna(inplace=True)
 ```
+```r
 
+library(AER)
 
+setwd("resources")
 
+df = read.csv("ID 2015 for London exported.csv")
+#crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
 
-
-
-
-
-
-
-
-
-
-
-
-Questions/Comments:
-
-* Remember to maybe filter for 2015 in crime_df
-* Are the LSOAs in the crime data according to the current LSOA (used in 2011) or are they the LSOA at that time (i.e. what it was in 2008)
-* Since we earlier filtered for just 2015 in the predictions, assume we can use the 2011 LSOA convention (?)
-
-
-
-
-
-
-
-
-
-
-
-
-
+#Run Poisson Model
+#summary(m1 <- glm(crime_count ~ predicted_score_nn, family="poisson", data=crime_subset_df))
+```

@@ -144,8 +144,11 @@
 
       var now_showing=0;
 
-      // Load the csv data containing (mean) scenic rating per point. We need to convert this to 
-      // a geojson format so that we can apply it to the leaflet map
+      /**
+       * Load the csv data containing (mean) scenic rating per point. We need to convert this to 
+       * a geojson format so that we can apply it to the leaflet map
+       */
+      
       d3.csv('mean_scenic_rating_locid2.csv', function (error, scenic) {
 	function reformat(array) {
 	  var data = [];
@@ -188,13 +191,12 @@
         });
         console.log("points layer", pointsLayer);
 
-        // Now load the data containing values/scores for multiple variables per LSOA, so 
-        // this information can be displayed as we rollover and click on an LSOA
+        /**
+         * Now load the data containing values/scores for multiple variables per LSOA, so 
+         * this information can be displayed as we rollover and click on an LSOA
+         */
 
-        function highlightFeature(e) {
-          /**
-           * Function defining style and highlighting for LSOA that the mouse is over.
-           */
+        function highlightFeature(e) { // set style and highlighting for LSOA that mouse is over
           var layer = e.target;
           layer.setStyle({
             weight: 1,
@@ -210,8 +212,7 @@
         }
 
         var lsoaBoundaries;
-        // function for mouseout
-        function resetHighlight(e) {
+        function resetHighlight(e) { // function for mouseout
           lsoaBoundaries.resetStyle(e.target);
           info.update();
         }
@@ -222,9 +223,6 @@
           info.update(layer.feature.properties);
         }
         
-        //function for click listener
-        var popup = L.popup();
-        //add listerners from above to map data layers
         function onEachFeature(feature, layer) {
           layer.on({
             mouseover: highlightFeature,
@@ -278,7 +276,11 @@
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
 
-        //custom info control
+        /**
+         * Next, add info (of scenic ratings and deprivation indices scores) to show when particular LSOA is clicked on
+         */
+        
+        // custom info control
         var info = L.control();
         info.onAdd = function (map) {
           this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
@@ -288,7 +290,6 @@
 
         // method to update the control based on feature properties passed
         info.update = function (props) {
-
           var rollover_html="";
           if ((!props)&&(!now_showing)) {
             rollover_html="<h4>Click on any area <br />to see region info</h4>";
@@ -326,7 +327,6 @@
           }
           this._div.innerHTML =  rollover_html;
         };
-
         info.addTo(leafletMap);
 
         function getIncomeBar(inc_rate) {
@@ -363,7 +363,7 @@
           return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
         
-        // make scenic rating colour scale legend
+        // scenic rating colour scale legend
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend');

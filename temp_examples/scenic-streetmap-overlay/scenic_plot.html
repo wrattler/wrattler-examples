@@ -115,7 +115,7 @@
 
       function percToColour(perc, min, max) {
 	/**
-	 * Min-max feature scaling: scale a percentage (e.g. scenic rating) to be between 0-100%
+	 * Min-max feature scaling: scale a percentage to be between 0-100
 	 * and return according hex colour, rendering from red to yellow to green. 
 	 *
 	 * @param  {Number} perc Percentage to scale
@@ -165,14 +165,13 @@
 	  return data;
 	}
         var geoData = { type: "FeatureCollection", features: reformat(scenic) };
+        console.log("geodata", geoData);
 
         var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -0.09], 13);
         var base = new L.StamenTileLayer("toner-lite");
         leafletMap.addLayer(base);
 
         var renderer = L.tileLayer.canvas({ padding: 0.5 });
-
-        console.log("geodata", geoData);
         pointsLayer = L.geoJson(geoData, {
 	  pointToLayer: function (feature, latlng) {
 	    geojsonMarkerOptions = {
@@ -189,21 +188,13 @@
         });
         console.log("points layer", pointsLayer);
 
-        // Now load the data containing scores for multiple variables per LSOA, so 
-        // we can display this information as we rollover
+        // Now load the data containing values/scores for multiple variables per LSOA, so 
+        // this information can be displayed as we rollover and click on an LSOA
 
-        function style(feature) { // Fill style for rollovers
-          return {
-            fillColor: '#acadc1',
-            weight: 1,
-            opacity: 0,
-            color: 'white',
-            fillOpacity: 0
-          };
-        }        
-
-        // function for highlight
         function highlightFeature(e) {
+          /**
+           * Function defining style and highlighting for LSOA that the mouse is over.
+           */
           var layer = e.target;
           layer.setStyle({
             weight: 1,
@@ -243,34 +234,46 @@
         }
 
 	$.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
-          console.log(json);
           console.log("lsoa crime data json", json);
 
-          // LSOA boundaries highlight as user scrolls over
-          lsoaBoundaries = L.geoJson(json, {style: style, onEachFeature: onEachFeature}).addTo(leafletMap);
+          // LSOA boundaries layer, highlight boundaries as user scrolls over
+          lsoaBoundaries = L.geoJson(json, {
+            style: function (feature) {
+              return {
+                fillColor: '#acadc1',
+                weight: 1,
+                opacity: 0,
+                color: 'white',
+                fillOpacity: 0
+              };
+            },
+            onEachFeature: onEachFeature
+          }).addTo(leafletMap);
           console.log("LSOA boundaries", lsoaBoundaries);
-          
+
+          // Scenery layer displaying mean scenic rating per LSOA data
           var sceneryLayer = L.geoJson(json, {
             style: function (feature) {
               return {
-                fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
-                weight: 1.1, // thickness of boundary lines
-                opacity: 0, // opacity of boundary lines
-                color: 'white', // colour of boundary lines
-                dashArray: '1', // dashing of boundary lines
-                fillOpacity: 0.4 // opacity of boundary areas
+                fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84),
+                weight: 1.1,
+                opacity: 0,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.4
               }; 
             }
           });
           console.log("Scenery layer", sceneryLayer);
 
+          // optionally switch between displaying scenic rating as points vs mean per LSOA
           var overlayMaps = {
             "Mean Scenic Ratings per LSOA": sceneryLayer,
             "Scenic Points": pointsLayer
           };
           L.control.layers(null, overlayMaps, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.on("overlayadd", function (event) {
-            lsoaBoundaries.bringToFront();
+            lsoaBoundaries.bringToFront(); // keep lsoa boundary information (including health, income scores etc.) at the front
           });
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
@@ -283,7 +286,7 @@
           return this._div;
         };
 
-        // method that we will use to update the control based on feature properties passed
+        // method to update the control based on feature properties passed
         info.update = function (props) {
 
           var rollover_html="";
@@ -293,12 +296,16 @@
           else if ((!props)&&(now_showing))
           {
             rollover_html+='<b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-              + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+'px; border-left: '
+              +parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
               +'Health<br />'
-              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-              + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px; border-left: '
+              +parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
+              +'<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px; border-left: '
+              +parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
               +'Employment<br />'
-              + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+              +'<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px; border-left: '
+              +parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
           }
           else if ((props)&&(!now_showing)) {
             rollover_html+="<h4>Show info for "+props.lsoa11cd+' ('+props.lsoa11nm+")</h4>";	
@@ -306,12 +313,16 @@
           else {
             rollover_html+='<h4>Show info for ' + props.lsoa11cd +' ('+props.lsoa11nm+') next?</h4>';
             rollover_html+='<br /><b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-              + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '
+              +parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
               +'Health<br />'
-              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-              + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px; border-left: '
+              +parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
+              +'<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px; border-left: '
+              +parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
               +'Employment<br />'
-              + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+              +'<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px; border-left: '
+              +parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
           }
           this._div.innerHTML =  rollover_html;
         };
@@ -319,16 +330,37 @@
         info.addTo(leafletMap);
 
         function getIncomeBar(inc_rate) {
+          /**
+           * Scale a given income rate to be between 0, and 10, according
+           * to the max and min in the dataset (.5 and 0, respectively).
+           *
+           * @param  {Number} inc_rate Income rate to scale
+           * @return {Number}          Scaled income rate 
+           */
           var a = 0, b = 10;
-          return a + (inc_rate - 0)*(b-a)/(0.5 - 0);
+          return a + (inc_rate - 0)*(b-a)/(.5 - 0);
         }
         function getHealthBar(h_score) {
+          /**
+           * Scale a given health score to be between 0, and 10, according
+           * to the max and min in the dataset (1.8 and -3.2, respectively).
+           *
+           * @param  {Number} h_score  Income rate to scale
+           * @return {Number}          Scaled health score
+           */
           var a = 0, b = 10;
           return a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0);
         }
         function getEmploymentBar(e_score) {
+          /**
+           * Scale a given employment score to be between 0, and 10, according
+           * to the max and min in the dataset (.4 and 0, respectively).
+           *
+           * @param  {Number} e_score  Employment score to scale
+           * @return {Number}          Scaled employment score
+           */          
           var a = 0, b = 10;
-          return a + (e_score - 0)*(b-a)/(0.4 - 0);
+          return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
         
         // make scenic rating colour scale legend
@@ -337,11 +369,8 @@
           var div = L.DomUtil.create('div', 'info legend');
           div.innerHTML = "Scenic Rating Scale";
           var legend_svg = d3.select(div).append('svg');
-
-          // append a defs (for definition) element to svg
           var defs = legend_svg.append("defs");
 
-          // append a linearGradient element to the defs and give it a unique id
           var linearGradient = defs.append("linearGradient")
               .attr("id", "linear-gradient");
 
@@ -353,7 +382,6 @@
             .attr("offset", "100%")
             .attr("stop-color", "#00ff00");
 
-          // draw the rectangle and fill with gradient
           legend_svg.append("rect")
             .attr("width", 200)
             .attr("height", 35)
@@ -363,7 +391,6 @@
         };
         legend.addTo(leafletMap);
       });
-
       </script>
   </body>
 </html>

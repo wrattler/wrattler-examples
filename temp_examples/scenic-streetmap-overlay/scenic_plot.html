@@ -1,119 +1,119 @@
 <!doctype html>
 <html>
-<head>
-	<title>Scenic Ratings of London</title>
-	<meta charset="utf-8">
-	<link href='https://fonts.googleapis.com/css?family=Lora:400,700italic' rel='stylesheet' type='text/css'>
-	<style>
-	.info {
-		padding: 6px 8px;
-		font-size: 20px;
-		font-family: 'Lora', serif;
-		background: #fbeb3f;
-		background: rgba(255,255,255,0.6);
-		box-shadow: 0 0 15px rgba(0,0,0,0.2);
-		border-radius: 5px;
-		width:200px;
-	}
-	.info h4 {
-		margin: 0 0 5px;
-		color: #777;
-		font-family: 'Lora', serif;
-		font-style:  italic;
-		font-weight: 700;
-	}
-	.legend {
-		text-align: center;
-		line-height: 32px;
-		color: #777;
-        height: 102px;
-	}
-	.legend i {
-		width: 18px;
-		height: 18px;
-		float: left;
-		margin-right: 8px;
-		opacity: 0.7;
-	}
-	.band {
-		float: left;
-		height: 5px;
-		background-color: #c9c9c9;
-	}
-	body {
-		font-size: 16px;
-		font-family: 'Lora', serif;
-	}
-	b {
-		font-family: 'Lora' !important;
-		font-style:  italic;
-		font-weight: 700;
-	}
-	h1 {
-		margin: 0 0 5px;
-		color: #000000;
-		font-family: 'Lora', serif;
-		font-style:  italic;
-		font-weight: 700;
-		font-size: 20px;
-	}	
-	h3 {
-	font-family: 'Lora' !important;
-		font-style:  italic;
-		font-weight: 700;
-		color: #3a5a7d;
-		text-decoration: underline; 
-		font-size: 16px;
-	}
-	a:link {
-		color: #3a5a7d;
-		font-style:  italic;
-	}
-	a:visited {
-		color: #3a5a7d;
-	}
-	a:hover {
-		color: #3a5a7d;
-		background-color: #d7d7d7;
-	}
-	a:active {
-		color: #3a5a7d;
-		background-color: #d7d7d7;
-	}
-	svg {
-		position: relative;
-	}
-	html, body, #wrapper, #map {
-		height: 100%;
-	}
-	#wrapper {
-		margin-left: 260px;
-	}
-	#map {
-		float: left;
-		width: 100%;
-	}
-	#sidebar {
-		float: left;
-		width: 260px;
-		margin-left: -260px;
-	}
+  <head>
+    <title>Scenic Ratings of London</title>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700italic' rel='stylesheet' type='text/css'>
+    <style>
+      .info {
+	  padding: 6px 8px;
+	  font-size: 20px;
+	  font-family: 'Lora', serif;
+	  background: #fbeb3f;
+	  background: rgba(255,255,255,0.6);
+	  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	  border-radius: 5px;
+	  width:200px;
+      }
+      .info h4 {
+	  margin: 0 0 5px;
+	  color: #777;
+	  font-family: 'Lora', serif;
+	  font-style:  italic;
+	  font-weight: 700;
+      }
+      .legend {
+	  text-align: center;
+	  line-height: 32px;
+	  color: #777;
+          height: 102px;
+      }
+      .legend i {
+	  width: 18px;
+	  height: 18px;
+	  float: left;
+	  margin-right: 8px;
+	  opacity: 0.7;
+      }
+      .band {
+	  float: left;
+	  height: 5px;
+	  background-color: #c9c9c9;
+      }
+      body {
+	  font-size: 16px;
+	  font-family: 'Lora', serif;
+      }
+      b {
+	  font-family: 'Lora' !important;
+	  font-style:  italic;
+	  font-weight: 700;
+      }
+      h1 {
+	  margin: 0 0 5px;
+	  color: #000000;
+	  font-family: 'Lora', serif;
+	  font-style:  italic;
+	  font-weight: 700;
+	  font-size: 20px;
+      }	
+      h3 {
+	  font-family: 'Lora' !important;
+	  font-style:  italic;
+	  font-weight: 700;
+	  color: #3a5a7d;
+	  text-decoration: underline; 
+	  font-size: 16px;
+      }
+      a:link {
+	  color: #3a5a7d;
+	  font-style:  italic;
+      }
+      a:visited {
+	  color: #3a5a7d;
+      }
+      a:hover {
+	  color: #3a5a7d;
+	  background-color: #d7d7d7;
+      }
+      a:active {
+	  color: #3a5a7d;
+	  background-color: #d7d7d7;
+      }
+      svg {
+	  position: relative;
+      }
+      html, body, #wrapper, #map {
+	  height: 100%;
+      }
+      #wrapper {
+	  margin-left: 260px;
+      }
+      #map {
+	  float: left;
+	  width: 100%;
+      }
+      #sidebar {
+	  float: left;
+	  width: 260px;
+	  margin-left: -260px;
+      }
     </style>
 
-	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
-	<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
     <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
-	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 
-</head>
-<body>
+  </head>
+  <body>
 
-	<div id="map"> </div>
+    <div id="map"> </div>
 
-	<script>
+    <script>
 
-    function percToColour(perc, min, max) {
+      function percToColour(perc, min, max) {
 	/**
 	 * Min-max feature scaling: scale a percentage (e.g. scenic rating) to be between 0-100%
 	 * and return according hex colour, rendering from red to yellow to green. 
@@ -137,33 +137,33 @@
 	else {
 	  g = 255;
 	  r = Math.round(510 - 5.10 * perc);
-    }
-    var h = r * 0x10000 + g * 0x100 + b * 0x1;
+        }
+        var h = r * 0x10000 + g * 0x100 + b * 0x1;
 	return '#' + ('000000' + h.toString(16)).slice(-6);
-    }
+      }
 
-	var now_showing=0;
+      var now_showing=0;
 
-    // Load the csv data containing (mean) scenic rating per point. We need to convert this to 
-    // a geojson format so that we can apply it to the leaflet map
-	d3.csv('mean_scenic_rating_locid2.csv', function (error, scenic) {
-		function reformat(array) {
-			var data = [];
-			array.map(function (d, i) {
-				data.push({
-					id: i,
-					type: "Feature",
-					properties: {
-						scenic_rating: d.mean_rating_per_locid,
-					},
-					geometry: {
-						coordinates: [+d.lon, +d.lat],
-						type: "Point"
-					}
-				});
-			});
-			return data;
-		}
+      // Load the csv data containing (mean) scenic rating per point. We need to convert this to 
+      // a geojson format so that we can apply it to the leaflet map
+      d3.csv('mean_scenic_rating_locid2.csv', function (error, scenic) {
+	function reformat(array) {
+	  var data = [];
+	  array.map(function (d, i) {
+	    data.push({
+	      id: i,
+	      type: "Feature",
+	      properties: {
+		scenic_rating: d.mean_rating_per_locid,
+	      },
+	      geometry: {
+		coordinates: [+d.lon, +d.lat],
+		type: "Point"
+	      }
+	    });
+	  });
+	  return data;
+	}
         var geoData = { type: "FeatureCollection", features: reformat(scenic) };
 
         var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -0.09], 13);
@@ -174,197 +174,196 @@
 
         console.log("geodata", geoData);
         pointsLayer = L.geoJson(geoData, {
-				pointToLayer: function (feature, latlng) {
-					geojsonMarkerOptions = {
-											radius: 3,
-											fillColor: percToColour(feature.properties.scenic_rating, 1.61, 6.34),
-											color: "white",
-											weight: 1,
-											opacity: 1,
-                                            fillOpacity: 0.8,
-                                            renderer: renderer
-											}
-					return L.circleMarker(latlng, geojsonMarkerOptions);
-                }
-            });
+	  pointToLayer: function (feature, latlng) {
+	    geojsonMarkerOptions = {
+	      radius: 3,
+	      fillColor: percToColour(feature.properties.scenic_rating, 1.61, 6.34),
+	      color: "white",
+	      weight: 1,
+	      opacity: 1,
+              fillOpacity: 0.8,
+              renderer: renderer
+	    }
+	    return L.circleMarker(latlng, geojsonMarkerOptions);
+          }
+        });
         console.log("points layer", pointsLayer);
 
         // Now load the data containing scores for multiple variables per LSOA, so 
         // we can display this information as we rollover
 
         function style(feature) { // Fill style for rollovers
-            return {
-                fillColor: '#acadc1',
-                weight: 1,
-                opacity: 0,
-                color: 'white',
-                fillOpacity: 0
-            };
+          return {
+            fillColor: '#acadc1',
+            weight: 1,
+            opacity: 0,
+            color: 'white',
+            fillOpacity: 0
+          };
         }        
 
         // function for highlight
         function highlightFeature(e) {
-            var layer = e.target;
-            layer.setStyle({
-                weight: 1,
-                opacity: 1,
-                color: '#acadc1',
-                dashArray: '',
-                fillOpacity: .2
-            });
-            if (!L.Browser.ie && !L.Browser.opera) {
-                layer.bringToFront();
-            }
-            info.update(layer.feature.properties);
+          var layer = e.target;
+          layer.setStyle({
+            weight: 1,
+            opacity: 1,
+            color: '#acadc1',
+            dashArray: '',
+            fillOpacity: .2
+          });
+          if (!L.Browser.ie && !L.Browser.opera) {
+            layer.bringToFront();
+          }
+          info.update(layer.feature.properties);
         }
 
         var lsoaBoundaries;
         // function for mouseout
         function resetHighlight(e) {
-            lsoaBoundaries.resetStyle(e.target);
-            info.update();
+          lsoaBoundaries.resetStyle(e.target);
+          info.update();
         }
 
         function displayInfo(e) {
-            var layer = e.target;
-            now_showing=layer.feature.properties;
-            info.update(layer.feature.properties);
+          var layer = e.target;
+          now_showing=layer.feature.properties;
+          info.update(layer.feature.properties);
         }
         
         //function for click listener
         var popup = L.popup();
         //add listerners from above to map data layers
         function onEachFeature(feature, layer) {
-            layer.on({
-                mouseover: highlightFeature,
-                mouseout: resetHighlight,
-                click: displayInfo
-            });
+          layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: displayInfo
+          });
         }
 
-        // TODO: probably load them with two different types of geometry, i.e. geometry collection (see More than you ever wanted to know about geojson)
-		$.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
-            console.log(json);
-            console.log("lsoa crime data json", json);
+	$.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
+          console.log(json);
+          console.log("lsoa crime data json", json);
 
-            // LSOA boundaries highlight as user scrolls over
-            lsoaBoundaries = L.geoJson(json, {style: style, onEachFeature: onEachFeature}).addTo(leafletMap);
-            console.log("LSOA boundaries", lsoaBoundaries);
-            
-            var sceneryLayer = L.geoJson(json, {
-                style: function (feature) {
-                    return {
-                            fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
-                            weight: 1.1, // thickness of boundary lines
-                            opacity: 0, // opacity of boundary lines
-                            color: 'white', // colour of boundary lines
-                            dashArray: '1', // dashing of boundary lines
-                            fillOpacity: 0.4 // opacity of boundary areas
-                            }; 
-                }
-            });
-            console.log("Scenery layer", sceneryLayer);
+          // LSOA boundaries highlight as user scrolls over
+          lsoaBoundaries = L.geoJson(json, {style: style, onEachFeature: onEachFeature}).addTo(leafletMap);
+          console.log("LSOA boundaries", lsoaBoundaries);
+          
+          var sceneryLayer = L.geoJson(json, {
+            style: function (feature) {
+              return {
+                fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
+                weight: 1.1, // thickness of boundary lines
+                opacity: 0, // opacity of boundary lines
+                color: 'white', // colour of boundary lines
+                dashArray: '1', // dashing of boundary lines
+                fillOpacity: 0.4 // opacity of boundary areas
+              }; 
+            }
+          });
+          console.log("Scenery layer", sceneryLayer);
 
-            var overlayMaps = {
-                            "Mean Scenic Ratings per LSOA": sceneryLayer,
-                            "Scenic Points": pointsLayer
-                            };
-            L.control.layers(null, overlayMaps, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
-            leafletMap.on("overlayadd", function (event) {
-                lsoaBoundaries.bringToFront();
-            });
-            leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
+          var overlayMaps = {
+            "Mean Scenic Ratings per LSOA": sceneryLayer,
+            "Scenic Points": pointsLayer
+          };
+          L.control.layers(null, overlayMaps, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
+          leafletMap.on("overlayadd", function (event) {
+            lsoaBoundaries.bringToFront();
+          });
+          leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
 
         //custom info control
         var info = L.control();
         info.onAdd = function (map) {
-            this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-            this.update();
-            return this._div;
+          this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+          this.update();
+          return this._div;
         };
 
         // method that we will use to update the control based on feature properties passed
         info.update = function (props) {
 
-            var rollover_html="";
-            if ((!props)&&(!now_showing)) {
-                rollover_html="<h4>Click on any area <br />to see region info</h4>";
-            }
-            else if ((!props)&&(now_showing))
-                {
-                rollover_html+='<b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-                + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-                +'Health<br />'
-                +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-                + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-                +'Employment<br />'
-                + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
-                }
-            else if ((props)&&(!now_showing)) {
-                rollover_html+="<h4>Show info for "+props.lsoa11cd+' ('+props.lsoa11nm+")</h4>";	
-            }
-            else {
-                rollover_html+='<h4>Show info for ' + props.lsoa11cd +' ('+props.lsoa11nm+') next?</h4>';
-                rollover_html+='<br /><b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-                + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-                +'Health<br />'
-                +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-                + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-                +'Employment<br />'
-                + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
-            }
-            this._div.innerHTML =  rollover_html;
+          var rollover_html="";
+          if ((!props)&&(!now_showing)) {
+            rollover_html="<h4>Click on any area <br />to see region info</h4>";
+          }
+          else if ((!props)&&(now_showing))
+          {
+            rollover_html+='<b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
+              + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'Health<br />'
+              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
+              + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'Employment<br />'
+              + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+          }
+          else if ((props)&&(!now_showing)) {
+            rollover_html+="<h4>Show info for "+props.lsoa11cd+' ('+props.lsoa11nm+")</h4>";	
+          }
+          else {
+            rollover_html+='<h4>Show info for ' + props.lsoa11cd +' ('+props.lsoa11nm+') next?</h4>';
+            rollover_html+='<br /><b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
+              + '<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '+parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'Health<br />'
+              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+ 'px; border-left: '+parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
+              + '<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
+              +'Employment<br />'
+              + '<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+ 'px; border-left: '+parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+          }
+          this._div.innerHTML =  rollover_html;
         };
 
         info.addTo(leafletMap);
 
         function getIncomeBar(inc_rate) {
-            var a = 0, b = 10;
-            return a + (inc_rate - 0)*(b-a)/(0.5 - 0);
+          var a = 0, b = 10;
+          return a + (inc_rate - 0)*(b-a)/(0.5 - 0);
         }
         function getHealthBar(h_score) {
-            var a = 0, b = 10;
-            return a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0);
+          var a = 0, b = 10;
+          return a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0);
         }
         function getEmploymentBar(e_score) {
-            var a = 0, b = 10;
-            return a + (e_score - 0)*(b-a)/(0.4 - 0);
+          var a = 0, b = 10;
+          return a + (e_score - 0)*(b-a)/(0.4 - 0);
         }
         
         // make scenic rating colour scale legend
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
-            var div = L.DomUtil.create('div', 'info legend');
-            div.innerHTML = "Scenic Rating Scale";
-            var legend_svg = d3.select(div).append('svg');
+          var div = L.DomUtil.create('div', 'info legend');
+          div.innerHTML = "Scenic Rating Scale";
+          var legend_svg = d3.select(div).append('svg');
 
-            // append a defs (for definition) element to svg
-            var defs = legend_svg.append("defs");
+          // append a defs (for definition) element to svg
+          var defs = legend_svg.append("defs");
 
-            // append a linearGradient element to the defs and give it a unique id
-            var linearGradient = defs.append("linearGradient")
-                .attr("id", "linear-gradient");
+          // append a linearGradient element to the defs and give it a unique id
+          var linearGradient = defs.append("linearGradient")
+              .attr("id", "linear-gradient");
 
-            // set the color for the start (0%) and end (100%)
-            linearGradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", "#ff0000");
-            linearGradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", "#00ff00");
+          // set the color for the start (0%) and end (100%)
+          linearGradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#ff0000");
+          linearGradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#00ff00");
 
-            // draw the rectangle and fill with gradient
-            legend_svg.append("rect")
-                .attr("width", 200)
-                .attr("height", 35)
-                .style("fill", "url(#linear-gradient)");
-            //TODO: add text to colour legend
-            return div;
+          // draw the rectangle and fill with gradient
+          legend_svg.append("rect")
+            .attr("width", 200)
+            .attr("height", 35)
+            .style("fill", "url(#linear-gradient)");
+          //TODO: add text to colour legend
+          return div;
         };
         legend.addTo(leafletMap);
-    });
+      });
 
-    </script>
-</body>
+      </script>
+  </body>
 </html>

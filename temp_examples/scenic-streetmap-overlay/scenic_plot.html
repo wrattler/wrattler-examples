@@ -71,14 +71,13 @@
 	  });
 	  return data;
 	}
-        var geoData = { type: "FeatureCollection", features: reformat(scenic) };
-        console.log("geodata", geoData);
+        var geoData = {type: "FeatureCollection", features: reformat(scenic)};
 
         var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -0.09], 13);
         var base = new L.StamenTileLayer("toner-lite");
         leafletMap.addLayer(base);
 
-        var renderer = L.tileLayer.canvas({ padding: 0.5 });
+        var renderer = L.tileLayer.canvas({padding: 0.5});
         pointsLayer = L.geoJson(geoData, {
 	  pointToLayer: function (feature, latlng) {
 	    geojsonMarkerOptions = {
@@ -93,14 +92,13 @@
 	    return L.circleMarker(latlng, geojsonMarkerOptions);
           }
         });
-        console.log("points layer", pointsLayer);
 
         /**
          * Now load the data containing values/scores for multiple variables per LSOA, so 
          * this information can be displayed as we rollover and click on an LSOA
          */
 
-        function highlightFeature(e) { // set style and highlighting for LSOA that mouse is over
+        function highlightFeature(e) {
           var layer = e.target;
           layer.setStyle({
             weight: 1,
@@ -116,7 +114,7 @@
         }
 
         var lsoaBoundaries;
-        function resetHighlight(e) { // function for mouseout
+        function resetHighlight(e) {
           lsoaBoundaries.resetStyle(e.target);
           info.update();
         }
@@ -136,9 +134,7 @@
         }
 
 	$.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
-          console.log("lsoa crime data json", json);
-
-          // LSOA boundaries layer, highlight boundaries as user scrolls over
+          // LSOA boundaries layer, highlight boundaries as user scrolls over, show info when clicked
           lsoaBoundaries = L.geoJson(json, {
             style: function (feature) {
               return {
@@ -151,9 +147,8 @@
             },
             onEachFeature: onEachFeature
           }).addTo(leafletMap);
-          console.log("LSOA boundaries", lsoaBoundaries);
 
-          // Scenery layer displaying mean scenic rating per LSOA data
+          // Scenery layer displaying mean scenic rating per LSOA
           var sceneryLayer = L.geoJson(json, {
             style: function (feature) {
               return {
@@ -166,22 +161,22 @@
               }; 
             }
           });
-          console.log("Scenery layer", sceneryLayer);
 
-          // optionally switch between displaying scenic rating as points vs mean per LSOA
+          // optionally switch between scenic rating per points versus mean per LSOA
           var overlayMaps = {
             "Mean Scenic Ratings per LSOA": sceneryLayer,
             "Scenic Points": pointsLayer
           };
           L.control.layers(null, overlayMaps, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.on("overlayadd", function (event) {
-            lsoaBoundaries.bringToFront(); // keep lsoa boundary information (including health, income scores etc.) at the front
+            lsoaBoundaries.bringToFront(); // keep lsoa boundary info (e.g. health, income scores etc.) at the front
           });
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
 
         /**
-         * Next, add info (of scenic ratings and deprivation indices scores) to show when particular LSOA is clicked on
+         * Next, add scaled info (including scenic rating and indices of health, income and employment deprivation) 
+         * to show when particular LSOA is clicked on
          */
         
         // custom info control
@@ -233,6 +228,17 @@
         };
         info.addTo(leafletMap);
 
+         function getScenicBar(s_rate) {
+          /**
+           * Scale a given scenic rating to be between 0, and 10, according
+           * to the max and min in the dataset (.5 and 0, respectively).
+           *
+           * @param  {Number} s_rate Scenic rating to scale
+           * @return {Number}        Scaled scenic rating 
+           */
+          var a = 0, b = 10; // TODO: get correct min and max
+          return a + (inc_rate - 0)*(b-a)/(.5 - 0);
+        }
         function getIncomeBar(inc_rate) {
           /**
            * Scale a given income rate to be between 0, and 10, according
@@ -249,7 +255,7 @@
            * Scale a given health score to be between 0, and 10, according
            * to the max and min in the dataset (1.8 and -3.2, respectively).
            *
-           * @param  {Number} h_score  Income rate to scale
+           * @param  {Number} h_score  Health to scale
            * @return {Number}          Scaled health score
            */
           var a = 0, b = 10;

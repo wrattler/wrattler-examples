@@ -7,7 +7,7 @@
 	  href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
 	  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
 	  crossorigin=""/>
-    
+
     <style>
       body {
 	  margin: 0;
@@ -19,23 +19,23 @@
 	  width: 100vw;
       }
     </style>
+<script src="https://d3js.org/d3.v4.min.js"></script>
 
   </head>
 
   <body>
 
-    <div id="mapid"></div>
-    
+	<div id="mapid"></div>
+	
     <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
 	    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
 	    crossorigin=""></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"
 	    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
 	    crossorigin="anonymous"></script>
-    
-    <script>
+	<script>
       
-      function percToColor(perc, min, max) {
+	function percToColor(perc, min, max) {
 	/**
 	 * Min-max feature scaling: scale a percentage (e.g. scenic rating) to be between 0-100%
 	 * and return according hex colour, rendering from red to yellow to green. 
@@ -61,80 +61,126 @@
 	  r = Math.round(510 - 5.10 * perc);
 	}
 	var h = r * 0x10000 + g * 0x100 + b * 0x1;
+	
 	return '#' + ('000000' + h.toString(16)).slice(-6);
       }
       
       var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-      var map_layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?', {attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'}).addTo(mymap);
+      //var map_layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?', {attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'});
+
+	  // need to find a way to lighten this
+	  //var map_layer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',subdomains: 'abcd',minZoom: 0,maxZoom: 20,ext: 'png'});
 
       // a grey scale version
-      //var map_layer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'}).addTo(mymap);
+      var map_layer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'});
+
+	  mymap.addLayer(map_layer);
+
+	  // add random marker to map just to check things
+		//var myMarker = L.marker([51.527391, -0.130689]).addTo(mymap);
 
       // show where user currently is on map
       function onLocationFound(e) {
-	var radius = e.accuracy;
-	L.marker(e.latlng).addTo(mymap)
-	  .bindPopup('You are within ' + radius + ' metres from this point').openPopup();
-	L.circle(e.latlng, radius).addTo(mymap);
+		var radius = e.accuracy;
+		L.marker(e.latlng).addTo(mymap)
+	  		.bindPopup('You are within ' + radius + ' metres from this point').openPopup();
+		L.circle(e.latlng, radius).addTo(mymap);
       }
       mymap.on('locationfound', onLocationFound);
       
       // centre the map according to where user currently is
       mymap.locate({setView: true, maxZoom: 14});
-      
+	  
       // add to map data of LSOA geo boundaries joined with scenic ratings
-      $.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
-        console.log(json);
+      $.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", async function(json){
+		console.log("Getting LSOA boundaries...");
+		//console.log(json);
         var scenery_layer = L.geoJSON(json, {
           style: function (feature) {
-	    
-	    return {fillColor: percToColor(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
-		    weight: 1.1, // thickness of boundary lines
-		    opacity: 1, // opacity of boundary lines
-		    color: 'white', // colour of boundary lines
-		    dashArray: '1', // dashing of boundary lines
-		    fillOpacity: 0.4}; // opacity of boundary areas
-	  }}).bindPopup(function (layer) {
-	    return layer.feature.properties.lsoa11nm;
-	  }).addTo(mymap);
+	    	return {
+					fillColor: percToColor(feature.properties.scenic_rating, 2.16, 4.84), // hex color for boundary fill
+		    		weight: 1.1, // thickness of boundary lines
+		    		opacity: 1, // opacity of boundary lines
+		    		color: 'white', // colour of boundary lines
+		    		dashArray: '1', // dashing of boundary lines
+					fillOpacity: 0.4 // opacity of boundary areas
+					}; 
+			}
+		}).bindPopup(function (layer) {
+	    	return layer.feature.properties.lsoa11nm;
+	  	}).addTo(mymap);
 
+	  	// add to map data of crime counts for each LSOA code
         var crime_count_layer = L.geoJSON(json, {
           style: function (feature) {
-	    
-            return {fillColor: percToColor(feature.properties.mean_monthly_crime_count, 0.9, 484), // hex color for boundary fill
-		    weight: 1.1, // thickness of boundary lines
-		    opacity: 1, // opacity of boundary lines
-		    color: 'white', // colour of boundary lines
-		    dashArray: '1', // dashing of boundary lines
-		    fillOpacity: 0.4}; // opacity of boundary areas
-	  }}).bindPopup(function (layer) {
-	    return layer.feature.properties.lsoa11nm;
-	  });
+            return {
+					fillColor: percToColor(feature.properties.mean_monthly_crime_count, 0.9, 484), // hex color for boundary fill
+		    		weight: 1.1, // thickness of boundary lines
+		    		opacity: 1, // opacity of boundary lines
+		    		color: 'white', // colour of boundary lines
+		    		dashArray: '1', // dashing of boundary lines
+					fillOpacity: 0.4 // opacity of boundary areas
+					};
+			}
+		}).bindPopup(function (layer) {
+	    	return layer.feature.properties.lsoa11nm;
+	  	});
+	
+	  	console.log("Finished getting LSOA boundaries!");
 
-        var pop_density_layer = L.geoJSON(json, {
-          style: function (feature) {
-	    
-            return {fillColor: percToColor(feature.properties.population_density_area_hectares_, 1.8, 1579.7), // hex color for boundary fill
-		    weight: 1.1, // thickness of boundary lines
-		    opacity: 1, // opacity of boundary lines
-		    color: 'white', // colour of boundary lines
-		    dashArray: '1', // dashing of boundary lines
-		    fillOpacity: 0.4}; // opacity of boundary areas
-	  }}).bindPopup(function (layer) {
-	    return layer.feature.properties.lsoa11nm;
-	  });
-        
-	// default display street map, optional add scenery ratings
-	var baseMaps = {
-	  "Open Street Map": map_layer
-	};
-	var overlapMaps = {
-	  "Scenery Ratings": scenery_layer,
-          "Crime Counts": crime_count_layer,
-          "Population Density": pop_density_layer
-	};
-	L.control.layers(baseMaps, overlapMaps).addTo(mymap);
-      });
+		let points_layer;
+		await new Promise(done => d3.csv('mean_scenic_rating_locid2.csv', async function (csv_d) {
+			console.log("Getting individual data points...");
+			function reformat(array) {
+				var data = [];
+				array.map(function (d, i) {
+					data.push({
+						id: i,
+						type: "Feature",
+						properties: {
+							scenic_rating: d.mean_rating_per_locid,
+						},
+						geometry: {
+							coordinates: [+d.lon, +d.lat],
+							type: "Point"
+						}
+					});
+				});
+				return data;
+			}	
+		
+			var geoData = { type: "FeatureCollection", features: reformat(csv_d) };
+
+			points_layer = L.geoJSON(geoData, {
+				pointToLayer: function (feature, latlng) {
+					
+					geojsonMarkerOptions = {
+											radius: 2,
+											fillColor: percToColor(feature.properties.scenic_rating, 1.61, 6.34),
+											color: "white",
+											weight: 1,
+											opacity: 1,
+											fillOpacity: 0.8
+											}
+					return L.circleMarker(latlng, geojsonMarkerOptions);
+				}
+			});
+
+			console.log("Finished getting indivudal points!");
+		}));
+
+		// default display street map, optional add scenery ratings
+		console.log("HERE");
+		var baseMaps = {
+	  					"Open Street Map": map_layer
+						};
+		var overlapMaps = {
+	  					"Scenery Ratings": scenery_layer,
+	  					"Scenic Points": points_layer,
+	  					"Crime Counts": crime_count_layer
+						};
+		L.control.layers(baseMaps, overlapMaps).addTo(mymap);
+	});
       
       </script>
   </body>

@@ -12,9 +12,7 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
   </head>
   <body>
-
     <div id="map"> </div>
-
     <script>
 
       function percToColour(perc, min, max) {
@@ -37,8 +35,7 @@
 	if(perc < 50) {
 	  r = 255;
 	  g = Math.round(5.1 * perc);
-	}
-	else {
+	} else {
 	  g = 255;
 	  r = Math.round(510 - 5.10 * perc);
         }
@@ -46,12 +43,13 @@
 	return '#' + ('000000' + h.toString(16)).slice(-6);
       }
 
-      var now_showing=0;
-
       /**
-       * Load the csv data containing (mean) scenic rating per point. We need to convert this to 
-       * a geojson format so that we can apply it to the leaflet map
+       * Load the csv data containing scenic ratings for particular points across london. 
+       * These values are the average rating of four viewpoints across 360 degrees per point. 
+       * This data is converted to geojson so it can be easily applied to a leaflet map
        */
+
+      var now_showing=0;
       
       d3.csv('mean_scenic_rating_locid2.csv', function (error, scenic) {
 	function reformat(array) {
@@ -73,11 +71,11 @@
 	}
         var geoData = {type: "FeatureCollection", features: reformat(scenic)};
 
-        var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -0.09], 13);
+        var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -.09], 13);
         var base = new L.StamenTileLayer("toner-lite");
         leafletMap.addLayer(base);
 
-        var renderer = L.tileLayer.canvas({padding: 0.5});
+        var renderer = L.tileLayer.canvas({padding: .5});
         pointsLayer = L.geoJson(geoData, {
 	  pointToLayer: function (feature, latlng) {
 	    geojsonMarkerOptions = {
@@ -86,7 +84,7 @@
 	      color: "white",
 	      weight: 1,
 	      opacity: 1,
-              fillOpacity: 0.8,
+              fillOpacity: .8,
               renderer: renderer
 	    }
 	    return L.circleMarker(latlng, geojsonMarkerOptions);
@@ -94,7 +92,7 @@
         });
 
         /**
-         * Now load the data containing values/scores for multiple variables per LSOA, so 
+         * Next load data containing values/scores for multiple variables per LSOA, so 
          * this information can be displayed as we rollover and click on an LSOA
          */
 
@@ -134,8 +132,7 @@
         }
 
 	$.getJSON("lsoa_boundaries_joined_with_crime_data.geojson", function(json){
-          // LSOA boundaries layer, highlight boundaries as user scrolls over, show info when clicked
-          lsoaBoundaries = L.geoJson(json, {
+          lsoaBoundaries = L.geoJson(json, { // boundary data as well as income, health data etc. info to display
             style: function (feature) {
               return {
                 fillColor: '#acadc1',
@@ -148,8 +145,7 @@
             onEachFeature: onEachFeature
           }).addTo(leafletMap);
 
-          // Scenery layer displaying mean scenic rating per LSOA
-          var sceneryLayer = L.geoJson(json, {
+          var sceneryLayer = L.geoJson(json, { // scenery layer displaying mean scenic ratings per LSOA
             style: function (feature) {
               return {
                 fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84),
@@ -162,7 +158,7 @@
             }
           });
 
-          var crimeLayer = L.geoJson(json, {
+          var crimeLayer = L.geoJson(json, { // crime layer displaying mean monthly crime counts per LSOA
             style: function (feature) {
               return {
                 fillColor: getCrimeColour(feature.properties.mean_monthly_crime_count),
@@ -175,22 +171,19 @@
             }
           });
 
-          // optionally switch between scenic rating per points versus mean per LSOA
+          // switch between scenic rating per points vs mean per LSOA vs crime counts
           var baseMaps = {
-            "Mean Scenic Ratings per LSOA": sceneryLayer,
-            "Mean number of crimes per month": crimeLayer,
+            "Average Scenic Ratings per LSOA": sceneryLayer,
+            "Average Crime Count per Month": crimeLayer,
             "Scenic Points": pointsLayer
           };
           L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
-          leafletMap.on("overlayadd", function (event) {
-            lsoaBoundaries.bringToFront(); // keep lsoa boundary info (e.g. health, income scores etc.) at the front
-          });
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
 
         /**
-         * Next, add scaled info (including scenic rating and indices of health, income and employment deprivation) 
-         * to show when particular LSOA is clicked on
+         * Then, add and scale info bars (scenic rating and indices of health, income and employment deprivation) 
+         * to show when particular LSOA is clicked on. Each variable has been scaled between 1 and 10.
          */
         
         // custom info control
@@ -206,9 +199,7 @@
           var rollover_html="";
           if ((!props)&&(!now_showing)) {
             rollover_html="<h4>Click on any area <br />to see region info</h4>";
-          }
-          else if ((!props)&&(now_showing))
-          {
+          } else if ((!props)&&(now_showing)) {
             rollover_html+='<b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
               +'<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+'px; border-left: '
               +parseInt(now_showing.scenic_rating*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
@@ -220,11 +211,9 @@
               +'Employment<br />'
               +'<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px; border-left: '
               +parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
-          }
-          else if ((props)&&(!now_showing)) {
+          } else if ((props)&&(!now_showing)) {
             rollover_html+="<h4>Show info for "+props.lsoa11cd+' ('+props.lsoa11nm+")</h4>";	
-          }
-          else {
+          } else {
             rollover_html+='<h4>Show info for ' + props.lsoa11cd +' ('+props.lsoa11nm+') next?</h4>';
             rollover_html+='<br /><b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
               +'<div class="band" style="width:'+parseInt(160-now_showing.scenic_rating*10*1.6)+ 'px; border-left: '
@@ -294,14 +283,12 @@
           return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
 
-        // scenic rating colour scale legend
-        var legend = L.control({position: 'bottomright'});
-        legend.onAdd = function (map) {
+        var scenicLegend = L.control({position: 'bottomright'});
+        scenicLegend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend');
-          div.innerHTML = "Scenic Rating Scale";
+          div.innerHTML = "Scenicness Rating<br>Low (0) &emsp;&nbsp; High (10)";
           var legend_svg = d3.select(div).append('svg');
           var defs = legend_svg.append("defs");
-
           var linearGradient = defs.append("linearGradient")
               .attr("id", "linear-gradient");
 
@@ -317,39 +304,41 @@
             .attr("width", 200)
             .attr("height", 35)
             .style("fill", "url(#linear-gradient)");
-          //TODO: add text to colour legend
+
           return div;
         };
 
-        // we need height to be 192px, line-height 28px
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend')
-	  grades = [55,25,15,7,2]
-	  label_text = [">50","20-50","10-20","5-10","<5"]
+          grades = [55,25,15,7,2]
+	  label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"]
 	  labels = ['Av. Monthly Crimes'];
-	  for (var i = 0; i < grades.length; i++) {
+	  for (var i=0; i<grades.length; i++) {
 	    labels.push(
 	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
 	  }
 	  div.innerHTML = labels.join('<br>');
-          console.log("DIV", div);
+          div.style.height = "200px";
+          div.style.width = "135px";
+          div.style.lineHeight = "29px";
 	  return div;
 	};
 
+        // display appropriate legend as baselayer changes
         leafletMap.on("baselayerchange", function (event) {
-          lsoaBoundaries.bringToFront(); // keep lsoa boundary info (e.g. health, income scores etc.) at the front
-          if (event.name === 'Mean number of crimes per month') {
-            if (legend._map) {
-              leafletMap.removeControl(legend);              
+          lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
+          if (event.name === "Average Crime Count per Month") {
+            if (scenicLegend._map) {
+              leafletMap.removeControl(scenicLegend);              
             }
             crimeLegend.addTo(leafletMap);
           } else {
             if (crimeLegend._map) {
               leafletMap.removeControl(crimeLegend);
             }
-            if (!legend._map) {
-              legend.addTo(leafletMap);
+            if (!scenicLegend._map) {
+              scenicLegend.addTo(leafletMap);
             }
           }
         });

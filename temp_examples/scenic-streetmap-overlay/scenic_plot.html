@@ -153,21 +153,35 @@
             style: function (feature) {
               return {
                 fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84),
-                weight: 1.1,
+                weight: 1,
                 opacity: 0,
                 color: 'white',
                 dashArray: '1',
-                fillOpacity: 0.4
+                fillOpacity: .4
+              }; 
+            }
+          });
+
+          var crimeLayer = L.geoJson(json, {
+            style: function (feature) {
+              return {
+                fillColor: getCrimeColour(feature.properties.mean_monthly_crime_count),
+                weight: 1,
+                opacity: 0,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: .4
               }; 
             }
           });
 
           // optionally switch between scenic rating per points versus mean per LSOA
-          var overlayMaps = {
+          var baseMaps = {
             "Mean Scenic Ratings per LSOA": sceneryLayer,
+            "Mean number of crimes per month": crimeLayer,
             "Scenic Points": pointsLayer
           };
-          L.control.layers(null, overlayMaps, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
+          L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.on("overlayadd", function (event) {
             lsoaBoundaries.bringToFront(); // keep lsoa boundary info (e.g. health, income scores etc.) at the front
           });
@@ -228,7 +242,14 @@
         };
         info.addTo(leafletMap);
 
-         function getScenicBar(s_rate) {
+        function getCrimeColour(crime_count){
+          return crime_count >= 50 ? '#a42e3d' :
+            crime_count >= 20  ? '#cb7572' :
+            crime_count >= 10  ? '#7fa4b4' :
+            crime_count >= 5   ? '#0e4b8d' :
+            '#012043';
+        }
+        function getScenicBar(s_rate) {
           /**
            * Scale a given scenic rating to be between 0, and 10, according
            * to the max and min in the dataset (.5 and 0, respectively).
@@ -272,7 +293,7 @@
           var a = 0, b = 10;
           return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
-        
+
         // scenic rating colour scale legend
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
@@ -299,7 +320,39 @@
           //TODO: add text to colour legend
           return div;
         };
-        legend.addTo(leafletMap);
+
+        // we need height to be 192px, line-height 28px
+        var crimeLegend = L.control({position: 'bottomright'});
+	crimeLegend.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info legend')
+	  grades = [55,25,15,7,2]
+	  label_text = [">50","20-50","10-20","5-10","<5"]
+	  labels = ['Av. Monthly Crimes'];
+	  for (var i = 0; i < grades.length; i++) {
+	    labels.push(
+	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
+	  }
+	  div.innerHTML = labels.join('<br>');
+          console.log("DIV", div);
+	  return div;
+	};
+
+        leafletMap.on("baselayerchange", function (event) {
+          lsoaBoundaries.bringToFront(); // keep lsoa boundary info (e.g. health, income scores etc.) at the front
+          if (event.name === 'Mean number of crimes per month') {
+            if (legend._map) {
+              leafletMap.removeControl(legend);              
+            }
+            crimeLegend.addTo(leafletMap);
+          } else {
+            if (crimeLegend._map) {
+              leafletMap.removeControl(crimeLegend);
+            }
+            if (!legend._map) {
+              legend.addTo(leafletMap);
+            }
+          }
+        });
       });
       </script>
   </body>

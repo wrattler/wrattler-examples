@@ -294,7 +294,7 @@
         scenicLegend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend');
           div.innerHTML = "Scenicness Rating<br>Low (0) &emsp;&nbsp; High (10)";
-          var legend_svg = d3.select(div).append('svg');
+          var legend_svg = d3.select(div).append("svg");
           var defs = legend_svg.append("defs");
           var linearGradient = defs.append("linearGradient")
               .attr("id", "linear-gradient");

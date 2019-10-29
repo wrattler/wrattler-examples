@@ -23,7 +23,7 @@
 	 * @param  {Number} perc Percentage to scale
 	 * @param  {Number} min  Minimum perc value
 	 * @param  {Number} max  Maximum perc value
-	 * @return {String}      Scaled hex color
+	 * @return {String}      Scaled hex colour
 	 */
 	if(arguments.length < 3)
 	  throw "Insufficient number of parameters passed.";
@@ -232,6 +232,13 @@
         info.addTo(leafletMap);
 
         function getCrimeColour(crime_count){
+          /**
+           * Get the appropariate colour of given number of crimes according
+           * to prespecified bins (red- high counts, blue - low counts).
+           *
+           * @param  {Number} crime_count Mean num of monthly crime counts
+           * @return {String}             Hex colour for category of counts
+           */
           return crime_count >= 50 ? '#a42e3d' :
             crime_count >= 20  ? '#cb7572' :
             crime_count >= 10  ? '#7fa4b4' :

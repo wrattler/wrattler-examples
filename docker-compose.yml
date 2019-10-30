@@ -1,7 +1,7 @@
 version: '3'
 services:
   wrattler_client:
-    container_name: wrattler_wrattler_client_1
+    container_name: wrattler_wrattler_client_examples_1
     build:
       context: .
       dockerfile: Dockerfile_client
@@ -23,7 +23,7 @@ services:
       - ./resources:/app/public/resources
 
   wrattler_python_service:
-    container_name: wrattler_wrattler_python_service_1
+    container_name: wrattler_wrattler_python_service_examples_1
     build:
       context: .
       dockerfile: Dockerfile_python_service
@@ -31,42 +31,42 @@ services:
     - "7101:7101"
     environment:
      - FLASK_CONFIGURATION=default
-     - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+     - DATASTORE_URI=http://wrattler_wrattler_data_store_examples_1:7102
     networks:
     - wrattler_nw
     volumes:
     - ./resources:/app/resources
 
   wrattler_r_service:
-    container_name: wrattler_wrattler_r_service_1
+    container_name: wrattler_wrattler_r_service_examples_1
     build:
       context: .
       dockerfile: Dockerfile_R_service
     ports:
     - "7103:7103"
     environment:
-      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+      - DATASTORE_URI=http://wrattler_wrattler_data_store_examples_1:7102
     networks:
     - wrattler_nw
     volumes:
     - ./resources:/app/resources
 
   wrattler_racket_service:
-    container_name: wrattler_wrattler_racket_service_1
+    container_name: wrattler_wrattler_racket_service_examples_1
     build:
       context: .
       dockerfile: Dockerfile_racket_service
     ports:
     - "7104:7104"
     environment:
-      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+      - DATASTORE_URI=http://wrattler_wrattler_data_store_examples_1:7102
     networks:
     - wrattler_nw
     volumes:
     - ./resources:/app/resources
 
   wrattler_data_store:
-    container_name: wrattler_wrattler_data_store_1
+    container_name: wrattler_wrattler_data_store_examples_1
     build:
       context: .
       dockerfile: Dockerfile_data_store
@@ -78,7 +78,7 @@ services:
     - wrattler_nw
 
   wrattler_jupyterlab:
-    container_name: wrattler_wrattler_jupyterlab_1
+    container_name: wrattler_wrattler_jupyterlab_examples_1
     build:
       context: .
       dockerfile: Dockerfile_jupyterlab

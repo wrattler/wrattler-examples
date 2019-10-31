@@ -70,27 +70,65 @@
 	  return data;
 	}
         var geoData = {type: "FeatureCollection", features: reformat(scenic)};
-        
-        var leafletMap = L.map('map', {preferCanvas:true}).setView([51.505, -.09], 13);
+
+        var leafletMap = L.map('map').setView([51.505, -.09], 13);
         var base = new L.StamenTileLayer("toner-lite");
         leafletMap.addLayer(base);
 
-        var renderer = L.tileLayer.canvas({padding: .5});
-        pointsLayer = L.geoJson(geoData, {
-	  pointToLayer: function (feature, latlng) {
-	    geojsonMarkerOptions = {
-	      radius: 3,
-	      fillColor: percToColour(feature.properties.scenic_rating, 1.5, 6.3),
-	      color: "white",
-	      weight: 1,
-	      opacity: 1,
-              fillOpacity: .8,
-              renderer: renderer
-	    }
-	    return L.circleMarker(latlng, geojsonMarkerOptions);
-          }
-        });
+        // svg appends a d3 layer for rendering svg to map, and g handles a shadow bug (keeps SVG groups together)
+        var svg = d3.select(leafletMap.getPanes().overlayPane).append("svg");
+        var g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
+        function projectPoint(x, y) {
+          var point = leafletMap.latLngToLayerPoint(new L.LatLng(y, x));
+          this.stream.point(point.x, point.y);
+        }
+
+        // The path and transform take regular coords and turn them into svg coords, and then
+        // those coords are applied back to the leaflet map layer using the current stream
+        var transform = d3.geo.transform({
+          point: projectPoint
+        });
+        var path = d3.geo.path().projection(transform);
+        leafletMap.on('moveend', mapmove);
+
+        redrawSubset(geoData.features)
+
+        function redrawSubset(subset) {
+          path.pointRadius(2);
+
+          var bounds = path.bounds({
+            type: "FeatureCollection",
+            features: subset
+          });
+          var topLeft = bounds[0];
+          var bottomRight = bounds[1];
+
+          svg.attr("width", bottomRight[0] - topLeft[0])
+            .attr("height", bottomRight[1] - topLeft[1])
+            .style("left", topLeft[0] + "px")
+            .style("top", topLeft[1] + "px");
+          
+          g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+          var points = g.selectAll("path")
+              .data(subset, function(d) {
+                return d.geometry.coordinates;
+              })
+              .enter()
+              .append("path")
+              .attr("d", path).attr("class", "points")
+              .style("fill", function(d) {return percToColour(d.properties.scenic_rating, 1.5, 6.3)})
+              .style("fillOpacity", .8);
+        }
+        
+        function mapmove(e) {
+          d3.selectAll(".points").remove(); // remove all points
+          redrawSubset(geoData.features);
+        }
+
+        d3.selectAll(".points").style("visibility", "hidden");
+        
         /**
          * Next load data containing values/scores for multiple variables per LSOA, so 
          * this information can be displayed as we rollover and click on an LSOA
@@ -157,7 +195,7 @@
               }; 
             }
           });
-
+          
           var crimeLayer = L.geoJson(json, { // crime layer displaying mean monthly crime counts per LSOA
             style: function (feature) {
               return {
@@ -171,16 +209,29 @@
             }
           });
 
+          var d3Layer = L.Class.extend({ // extend leaflet class to toggle on/off d3 layer w/ other leaflet layers
+            initialize: function() {
+              return;
+            },
+            onAdd: function() {
+              d3.selectAll(".points").style("visibility", "visible");
+            },
+            onRemove: function() {
+              d3.selectAll(".points").style("visibility", "hidden");
+            },
+          });
+          svgPointsLayer = new d3Layer(); 
+          
           // switch between scenic rating per points vs mean per LSOA vs crime counts
           var baseMaps = {
             "Average Scenic Ratings per LSOA": sceneryLayer,
             "Average Crime Count per Month": crimeLayer,
-            "Scenic Points": pointsLayer
+            "Scenic Points": svgPointsLayer
           };
           L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
         });
-
+        
         /**
          * Then, add and scale info bars (scenic rating and indices of health, income and employment deprivation) 
          * to show when particular LSOA is clicked on. Each variable has been scaled between 1 and 10.
@@ -333,12 +384,12 @@
 	  return div;
 	};
 
-        // display appropriate legend as baselayer changes
+        //display appropriate legend as baselayer changes
         leafletMap.on("baselayerchange", function (event) {
-          lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
+          lsoaBoundaries.bringToFront(); //keep lsoa boundary info (health, income scores etc.) at the front
           if (event.name === "Average Crime Count per Month") {
             if (scenicLegend._map) {
-              leafletMap.removeControl(scenicLegend);              
+              leafletMap.removeControl(scenicLegend);
             }
             crimeLegend.addTo(leafletMap);
           } else {
@@ -349,7 +400,7 @@
               scenicLegend.addTo(leafletMap);
             }
           }
-        });
+        }); 
       });
       </script>
   </body>

@@ -45,8 +45,9 @@
 
       /**
        * Load the csv data containing scenic ratings for particular points across london. 
-       * These values are the average rating of four viewpoints across 360 degrees per point. 
-       * This data is converted to geojson so it can be easily applied to a leaflet map
+       * These values are the average rating of ~four viewpoints across 360 degrees per point. 
+       * The data is converted to geojson so we can easily extract the coordinates of points, 
+       * and the library d3 is used to help display the (~130000) points
        */
 
       var now_showing=0;
@@ -75,24 +76,25 @@
         var base = new L.StamenTileLayer("toner-lite");
         leafletMap.addLayer(base);
 
-        // svg appends a d3 layer for rendering svg to map, and g handles a shadow bug (keeps SVG groups together)
+        // svg appends a d3 layer for rendering svg to the leaflet map
         var svg = d3.select(leafletMap.getPanes().overlayPane).append("svg");
-        var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+        var g = svg.append("g").attr("class", "leaflet-zoom-hide"); // g keeps SVGs grouped together
 
         function projectPoint(x, y) {
           var point = leafletMap.latLngToLayerPoint(new L.LatLng(y, x));
           this.stream.point(point.x, point.y);
         }
 
-        // The path and transform take regular coords and turn them into svg coords, and then
-        // those coords are applied back to the leaflet map layer using the current stream
+        // Path and transform take regular coords and turn them into svg coords, and
+        // those coords are applied back to the leaflet map layer using the current stream (above)
+        
         var transform = d3.geo.transform({
           point: projectPoint
         });
         var path = d3.geo.path().projection(transform);
-        leafletMap.on('moveend', mapmove);
+        leafletMap.on('moveend', mapmove); // remove points and redraw relevant subset as we move around map
 
-        redrawSubset(geoData.features)
+        redrawSubset(geoData.features) // draw susbet in starting position
 
         function redrawSubset(subset) {
           path.pointRadius(2);
@@ -123,15 +125,16 @@
         }
         
         function mapmove(e) {
-          d3.selectAll(".points").remove(); // remove all points
+          d3.selectAll(".points").remove();
           redrawSubset(geoData.features);
         }
 
         d3.selectAll(".points").style("visibility", "hidden");
         
         /**
-         * Next load data containing values/scores for multiple variables per LSOA, so 
-         * this information can be displayed as we rollover and click on an LSOA
+         * Next load data containing values for multiple variables per LSOA, so this info can be
+         * displayed as we rollover and click on an LSOA. These layers have far fewer points 
+         * (1 per LSOA), and so are implemented purely in leaflet
          */
 
         function highlightFeature(e) {

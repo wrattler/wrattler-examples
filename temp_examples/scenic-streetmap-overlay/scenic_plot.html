@@ -233,6 +233,11 @@
           };
           L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
+          leafletMap.on('moveend', function(event) {
+            if (leafletMap.hasLayer(svgPointsLayer) == false){
+              d3.selectAll(".points").style("visibility", "hidden");
+            }
+          });
         });
         
         /**

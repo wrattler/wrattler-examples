@@ -247,36 +247,27 @@
 
         // method to update the control based on feature properties passed
         info.update = function (props) {
-          var rollover_html="";
+          var rollover_html=``;
           if ((!props)&&(!now_showing)) {
-            rollover_html="<h4>Click on any area <br />to see region info</h4>";
-          } else if ((!props)&&(now_showing)) {
-            rollover_html+='<b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-              +'<div class="band" style="width:'+parseInt(160-getScenicBar(now_showing.scenic_rating)*10*1.6)+'px; border-left: '
-              +parseInt(getScenicBar(now_showing.scenic_rating)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-              +'Health<br />'
-              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px; border-left: '
-              +parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-              +'<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px; border-left: '
-              +parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-              +'Employment<br />'
-              +'<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px; border-left: '
-              +parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+            rollover_html=`<h4>Click on any area <br />to see region info</h4>`;
           } else if ((props)&&(!now_showing)) {
-            rollover_html+="<h4>Show info for "+props.lsoa11cd+' ('+props.lsoa11nm+")</h4>";	
+            rollover_html+=`<h4>Show info for `+props.lsoa11cd+` (`+props.lsoa11nm+`)</h4>`;	
           } else {
-            rollover_html+='<h4>Show info for ' + props.lsoa11cd +' ('+props.lsoa11nm+') next?</h4>';
-            rollover_html+='<br /><b>Area: '+now_showing.lsoa11cd+' ('+now_showing.lsoa11nm+')</b><br />Scenicness<br />' 
-              +'<div class="band" style="width:'+parseInt(160-getScenicBar(now_showing.scenic_rating)*10*1.6)+ 'px; border-left: '
-              +parseInt(getScenicBar(now_showing.scenic_rating)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-              +'Health<br />'
-              +'<div class="band" style="width:'+parseInt(160-getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px; border-left: '
-              +parseInt(getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score)*10*1.6)+'px solid #a42e3d">&nbsp;</div>Income<br />'
-              +'<div class="band" style="width:'+parseInt(160-getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px; border-left: '
-              +parseInt(getIncomeBar(now_showing.deprivation_income_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>'
-              +'Employment<br />'
-              +'<div class="band" style="width:'+parseInt(160-getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px; border-left: '
-              +parseInt(getEmploymentBar(now_showing.deprivation_employment_score_rate)*10*1.6)+'px solid #a42e3d">&nbsp;</div>';
+            if (props) { // currently hovering over
+              rollover_html+=`<h4>Show info for `+props.lsoa11cd+` (`+props.lsoa11nm+`) next?</h4>`;
+            }
+            var showingCode = now_showing.lsoa11cd;
+            var showingName = now_showing.lsoa11nm;
+            var scenicness = getScenicBar(now_showing.scenic_rating);
+            var health = getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score);
+            var income = getIncomeBar(now_showing.deprivation_income_score_rate);
+            var employ = getEmploymentBar(now_showing.deprivation_employment_score_rate);
+            rollover_html+=`<br/><b>Area: ${showingCode} (${showingName})</b>
+                           <br/>Scenicness<br/><div class="band" style="width:${160-scenicness*10*1.6}px; 
+                                                                        border-left:${scenicness*10*1.6}px solid #a42e3d">&nbsp;</div>
+                           Health<br/><div class="band" style="width:${160-health*10*1.6}px; border-left:${health*10*1.6}px solid #a42e3d">&nbsp;</div>
+                           Income<br/><div class="band" style="width:${160-income*10*1.6}px; border-left:${income*10*1.6}px solid #a42e3d">&nbsp;</div>
+                           Employment<br/><div class="band" style="width:${160-employ*10*1.6}px; border-left:${employ*10*1.6}px solid #a42e3d">&nbsp;</div>`;
           }
           this._div.innerHTML =  rollover_html;
         };

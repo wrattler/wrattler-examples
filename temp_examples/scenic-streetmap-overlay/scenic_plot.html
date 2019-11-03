@@ -375,9 +375,9 @@
 	  return div;
 	};
 
-        //display appropriate legend as baselayer changes
+        // display appropriate legend as baselayer changes
         leafletMap.on("baselayerchange", function (event) {
-          lsoaBoundaries.bringToFront(); //keep lsoa boundary info (health, income scores etc.) at the front
+          lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
           if (event.name === "Average Crime Count per Month") {
             if (scenicLegend._map) {
               leafletMap.removeControl(scenicLegend);

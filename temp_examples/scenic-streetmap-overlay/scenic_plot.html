@@ -92,9 +92,6 @@
           point: projectPoint
         });
         var path = d3.geo.path().projection(transform);
-        leafletMap.on('moveend', mapmove); // remove points and redraw relevant subset as we move around map
-
-        redrawSubset(geoData.features) // draw susbet in starting position
 
         function redrawSubset(subset) {
           path.pointRadius(2);
@@ -119,18 +116,16 @@
               })
               .enter()
               .append("path")
-              .attr("d", path).attr("class", "points")
+              .attr("d", path).attr("class", "point")
               .style("fill", function(d) {return percToColour(d.properties.scenic_rating, 1.5, 6.3)})
               .style("fillOpacity", .8);
         }
         
         function mapmove(e) {
-          d3.selectAll(".points").remove();
+          d3.selectAll(".point").remove();
           redrawSubset(geoData.features);
         }
 
-        d3.selectAll(".points").style("visibility", "hidden");
-        
         /**
          * Next load data containing values for multiple variables per LSOA, so this info can be
          * displayed as we rollover and click on an LSOA. These layers have far fewer points 
@@ -217,10 +212,12 @@
               return;
             },
             onAdd: function() {
-              d3.selectAll(".points").style("visibility", "visible");
+              leafletMap.on('viewreset', mapmove); // remove points and redraw relevant subset as we move around map
+              redrawSubset(geoData.features); // draw initial susbet in starting position
             },
             onRemove: function() {
-              d3.selectAll(".points").style("visibility", "hidden");
+              leafletMap.off('viewreset', mapmove);
+              d3.selectAll(".point").remove();
             },
           });
           svgPointsLayer = new d3Layer(); 
@@ -233,13 +230,8 @@
           };
           L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
-          leafletMap.on('moveend', function(event) {
-            if (leafletMap.hasLayer(svgPointsLayer) == false){
-              d3.selectAll(".points").style("visibility", "hidden");
-            }
-          });
         });
-        
+
         /**
          * Then, add and scale info bars (scenic rating and indices of health, income and employment deprivation) 
          * to show when particular LSOA is clicked on. Each variable has been scaled between 1 and 10.

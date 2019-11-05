@@ -193,7 +193,7 @@
               }; 
             }
           });
-          
+
           var crimeLayer = L.geoJson(json, { // crime layer displaying mean monthly crime counts per LSOA
             style: function (feature) {
               return {
@@ -220,13 +220,12 @@
               d3.selectAll(".point").remove();
             },
           });
-          svgPointsLayer = new d3Layer(); 
           
           // switch between scenic rating per points vs mean per LSOA vs crime counts
           var baseMaps = {
             "Average Scenic Ratings per LSOA": sceneryLayer,
             "Average Crime Count per Month": crimeLayer,
-            "Scenic Points": svgPointsLayer
+            "Scenic Points": new d3Layer()
           };
           L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
           leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
@@ -249,25 +248,28 @@
         info.update = function (props) {
           var rollover_html=``;
           if ((!props)&&(!now_showing)) {
-            rollover_html=`<h4>Click on any area <br />to see region info</h4>`;
+            rollover_html=`<h4>Click on any LSOA <br />to see region data</h4>`;
           } else if ((props)&&(!now_showing)) {
-            rollover_html+=`<h4>Show info for `+props.lsoa11cd+` (`+props.lsoa11nm+`)</h4>`;	
+            rollover_html+=`<h4>Show data for `+props.lsoa11cd+` (`+props.lsoa11nm+`)</h4>`;	
           } else {
-            if (props) { // currently hovering over
-              rollover_html+=`<h4>Show info for `+props.lsoa11cd+` (`+props.lsoa11nm+`) next?</h4>`;
-            }
             var showingCode = now_showing.lsoa11cd;
             var showingName = now_showing.lsoa11nm;
             var scenicness = getScenicBar(now_showing.scenic_rating);
             var health = getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score);
             var income = getIncomeBar(now_showing.deprivation_income_score_rate);
             var employ = getEmploymentBar(now_showing.deprivation_employment_score_rate);
-            rollover_html+=`<br/><b>Area: ${showingCode} (${showingName})</b>
+            var crime = now_showing.mean_monthly_crime_count;
+            rollover_html+=`<b>LSOA: ${showingCode} (${showingName})</b>
                            <br/>Scenicness<br/><div class="band" style="width:${160-scenicness*10*1.6}px; 
                                                                         border-left:${scenicness*10*1.6}px solid #a42e3d">&nbsp;</div>
                            Health<br/><div class="band" style="width:${160-health*10*1.6}px; border-left:${health*10*1.6}px solid #a42e3d">&nbsp;</div>
                            Income<br/><div class="band" style="width:${160-income*10*1.6}px; border-left:${income*10*1.6}px solid #a42e3d">&nbsp;</div>
-                           Employment<br/><div class="band" style="width:${160-employ*10*1.6}px; border-left:${employ*10*1.6}px solid #a42e3d">&nbsp;</div>`;
+                           Employment<br/><div class="band" style="width:${160-employ*10*1.6}px; border-left:${employ*10*1.6}px solid #a42e3d">&nbsp;</div>
+                           Crime<br/><div class="band" style="width:${160-crime*10*1.6}px; border-left:${crime*10*1.6}px solid #a42e3d">&nbsp;</div>`;
+            if (props) { // currently hovering over
+              rollover_html+=`<br/><h4>Show data for `+props.lsoa11cd+` (`+props.lsoa11nm+`) next?</h4>`;
+            }
+
           }
           this._div.innerHTML =  rollover_html;
         };
@@ -314,8 +316,8 @@
            * Scale a given health score to be between 0, and 10, according
            * to the max and min in the dataset (1.8 and -3.2, respectively).
            *
-           * @param  {Number} h_score  Health to scale
-           * @return {Number}          Scaled health score
+           * @param  {Number} h_score Health to scale
+           * @return {Number}         Scaled health score
            */
           var a = 0, b = 10;
           return a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0);
@@ -325,38 +327,47 @@
            * Scale a given employment score to be between 0, and 10, according
            * to the max and min in the dataset (.4 and 0, respectively).
            *
-           * @param  {Number} e_score  Employment score to scale
-           * @return {Number}          Scaled employment score
+           * @param  {Number} e_score Employment score to scale
+           * @return {Number}         Scaled employment score
            */          
           var a = 0, b = 10;
           return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
 
-        var scenicLegend = L.control({position: 'bottomright'});
-        scenicLegend.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info legend');
-          div.innerHTML = "Scenicness Rating<br>Low (0) &emsp;&nbsp; High (10)";
-          var legend_svg = d3.select(div).append("svg");
-          var defs = legend_svg.append("defs");
-          var linearGradient = defs.append("linearGradient")
-              .attr("id", "linear-gradient");
-
-          // set the color for the start (0%) and end (100%)
-          linearGradient.append("stop")
-            .attr("offset", "0%")
-            .attr("stop-color", percToColour(2.16, 2.16, 4.84));
-          linearGradient.append("stop")
-            .attr("offset", "100%")
-            .attr("stop-color", percToColour(4.84, 2.16, 4.84));
-
-          legend_svg.append("rect")
-            .attr("width", 200)
-            .attr("height", 35)
-            .style("fill", "url(#linear-gradient)")
-            .style("opacity", 0.8);
-
-          return div;
-        };
+        var continuousScaleLegend = L.Control.extend({
+          initialize: function(min, max) {
+           /**
+            * @param {Number} min Min value in data (low end of colour scale)
+            * @param {Number} max Max value in data (high end of colour scale)
+            */
+            this._min = min;
+            this._max = max;
+            return;
+          },
+          options: {position: 'bottomright'},
+          onAdd: function(map) {
+            var div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML = `Scenicness Rating<br>Min (${this._min}) &emsp;&nbsp; Max (${this._max})`;
+            var legend_svg = d3.select(div).append("svg");
+            var defs = legend_svg.append("defs");
+            var linearGradient = defs.append("linearGradient")
+                .attr("id", "linear-gradient");
+            linearGradient.append("stop")
+              .attr("offset", "0%")
+              .attr("stop-color", percToColour(this._min, this._min, this._max));
+            linearGradient.append("stop")
+              .attr("offset", "100%")
+              .attr("stop-color", percToColour(this._max, this._min, this._max));
+            legend_svg.append("rect")
+              .attr("width", 200)
+              .attr("height", 35)
+              .style("fill", "url(#linear-gradient)")
+              .style("opacity", 0.8);
+            return div;
+          },
+        });
+        var scenicPointsLegend = new continuousScaleLegend(1.5, 6.3);
+        var scenicLsoaLegend = new continuousScaleLegend(2.1, 4.8);
 
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
@@ -369,29 +380,39 @@
 	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
 	  }
 	  div.innerHTML = labels.join('<br>');
-          div.style.height = "200px";
-          div.style.width = "135px";
-          div.style.lineHeight = "29px";
-	  return div;
+          div.style = "height: 200px; width: 135px; line-height: 29px;";
+          return div;
 	};
 
         // display appropriate legend as baselayer changes
         leafletMap.on("baselayerchange", function (event) {
           lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
           if (event.name === "Average Crime Count per Month") {
-            if (scenicLegend._map) {
-              leafletMap.removeControl(scenicLegend);
+            if (scenicPointsLegend._map) {
+              leafletMap.removeControl(scenicPointsLegend);
+            }
+            else if (scenicLsoaLegend._map) {
+              leafletMap.removeControl(scenicLsoaLegend);
             }
             crimeLegend.addTo(leafletMap);
           } else {
             if (crimeLegend._map) {
               leafletMap.removeControl(crimeLegend);
             }
-            if (!scenicLegend._map) {
-              scenicLegend.addTo(leafletMap);
+            if (event.name === "Scenic Points") {
+              if (scenicLsoaLegend._map) {
+                leafletMap.removeControl(scenicLsoaLegend);
+              }
+              scenicPointsLegend.addTo(leafletMap);
+            }
+            else {
+              if (scenicPointsLegend._map) {
+                leafletMap.removeControl(scenicPointsLegend);
+              }
+              scenicLsoaLegend.addTo(leafletMap);
             }
           }
-        }); 
+        });
       });
       </script>
   </body>

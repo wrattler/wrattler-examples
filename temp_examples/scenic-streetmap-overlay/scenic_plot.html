@@ -260,6 +260,8 @@
             var health = getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score);
             var income = getIncomeBar(now_showing.deprivation_income_score_rate);
             var employ = getEmploymentBar(now_showing.deprivation_employment_score_rate);
+            var education = getEducationBar(now_showing.deprivation_education_skills_and_training_score);
+            var livingEnv = getLivingEnvBar(now_showing.deprivation_living_environment_score);
             var crime = now_showing.mean_monthly_crime_count;
             rollover_html+=`<b>LSOA: ${showingCode} (${showingName})</b>
                            <br/>Scenicness<br/><div class="band" style="width:${160-scenicness*10*1.6}px; 
@@ -267,11 +269,12 @@
                            Health<br/><div class="band" style="width:${160-health*10*1.6}px; border-left:${health*10*1.6}px solid #a42e3d">&nbsp;</div>
                            Income<br/><div class="band" style="width:${160-income*10*1.6}px; border-left:${income*10*1.6}px solid #a42e3d">&nbsp;</div>
                            Employment<br/><div class="band" style="width:${160-employ*10*1.6}px; border-left:${employ*10*1.6}px solid #a42e3d">&nbsp;</div>
-                           Crime<br/><div class="band" style="width:${160-crime*10*1.6}px; border-left:${crime*10*1.6}px solid #a42e3d">&nbsp;</div>`;
+                           Education<br/><div class="band" style="width:${160-education*10*1.6}px; border-left:${education*10*1.6}px solid #a42e3d">&nbsp;</div>
+                           Living Environ.<br/><div class="band" style="width:${160-livingEnv*10*1.6}px; border-left:${livingEnv*10*1.6}px solid #a42e3d">&nbsp;</div>`;
+                         //Crime<br/><div class="band" style="width:${160-crime*10*1.6}px; border-left:${crime*10*1.6}px solid #a42e3d">&nbsp;</div>`;
             if (props) { // currently hovering over
               rollover_html+=`<br/><h4>Show data for `+props.lsoa11cd+` (`+props.lsoa11nm+`) next?</h4>`;
             }
-
           }
           this._div.innerHTML =  rollover_html;
         };
@@ -335,7 +338,29 @@
           var a = 0, b = 10;
           return a + (e_score - 0)*(b-a)/(.4 - 0);
         }
-
+        function getEducationBar(e_score) {
+          /**
+           * Scale a given education score to be between 0, and 10, according
+           * to the max and min in the dataset (64 and 0, respectively).
+           *
+           * @param  {Number} e_score Education score to scale
+           * @return {Number}         Scaled education score
+           */          
+          var a = 0, b = 10;
+          return a + (e_score - 0)*(b-a)/(64 - 0);
+        }
+        function getLivingEnvBar(e_score) {
+          /**
+           * Scale a given education score to be between 0, and 10, according
+           * to the max and min in the dataset (93.4 and 4, respectively).
+           *
+           * @param  {Number} e_score Living environment score to scale
+           * @return {Number}         Scaled living environment score
+           */          
+          var a = 0, b = 10;
+          return a + (e_score - 4)*(b-a)/(93.4 - 4);
+        }
+        
         var continuousScaleLegend = L.Control.extend({
           initialize: function(min, max) {
            /**

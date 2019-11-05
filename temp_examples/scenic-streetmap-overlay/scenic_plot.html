@@ -214,10 +214,12 @@
             onAdd: function() {
               leafletMap.on('viewreset', mapmove); // remove points and redraw relevant subset as we move around map
               redrawSubset(geoData.features); // draw initial susbet in starting position
+              scenicPointsLegend.addTo(leafletMap);              
             },
             onRemove: function() {
               leafletMap.off('viewreset', mapmove);
               d3.selectAll(".point").remove();
+              leafletMap.removeControl(scenicPointsLegend);
             },
           });
           
@@ -368,7 +370,7 @@
         });
         var scenicPointsLegend = new continuousScaleLegend(1.5, 6.3);
         var scenicLsoaLegend = new continuousScaleLegend(2.1, 4.8);
-
+        
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend')
@@ -388,10 +390,7 @@
         leafletMap.on("baselayerchange", function (event) {
           lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
           if (event.name === "Average Crime Count per Month") {
-            if (scenicPointsLegend._map) {
-              leafletMap.removeControl(scenicPointsLegend);
-            }
-            else if (scenicLsoaLegend._map) {
+            if (scenicLsoaLegend._map) {
               leafletMap.removeControl(scenicLsoaLegend);
             }
             crimeLegend.addTo(leafletMap);
@@ -399,17 +398,13 @@
             if (crimeLegend._map) {
               leafletMap.removeControl(crimeLegend);
             }
-            if (event.name === "Scenic Points") {
+            if (event.name === "Average Scenic Ratings per LSOA") {
+              scenicLsoaLegend.addTo(leafletMap);
+            }
+            else { // layer change to scenic points
               if (scenicLsoaLegend._map) {
                 leafletMap.removeControl(scenicLsoaLegend);
               }
-              scenicPointsLegend.addTo(leafletMap);
-            }
-            else {
-              if (scenicPointsLegend._map) {
-                leafletMap.removeControl(scenicPointsLegend);
-              }
-              scenicLsoaLegend.addTo(leafletMap);
             }
           }
         });

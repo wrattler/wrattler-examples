@@ -321,7 +321,7 @@
            * @return {Number}          Scaled income rate 
            */
           var a = 0, b = 10;
-          return a + (inc_rate - 0)*(b-a)/(.5 - 0);
+          return b - (a + (inc_rate - 0)*(b-a)/(.5 - 0));
         }
         function getHealthBar(h_score) {
           /**
@@ -332,7 +332,7 @@
            * @return {Number}         Scaled health score
            */
           var a = 0, b = 10;
-          return a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0);
+          return b - (a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0));
         }
         function getEmploymentBar(e_score) {
           /**
@@ -343,7 +343,7 @@
            * @return {Number}         Scaled employment score
            */          
           var a = 0, b = 10;
-          return a + (e_score - 0)*(b-a)/(.4 - 0);
+          return b - (a + (e_score - 0)*(b-a)/(.4 - 0));
         }
         function getEducationBar(e_score) {
           /**
@@ -354,7 +354,7 @@
            * @return {Number}         Scaled education score
            */          
           var a = 0, b = 10;
-          return a + (e_score - 0)*(b-a)/(64 - 0);
+          return b - (a + (e_score - 0)*(b-a)/(64 - 0));
         }
         function getLivingEnvBar(e_score) {
           /**
@@ -365,7 +365,7 @@
            * @return {Number}         Scaled living environment score
            */          
           var a = 0, b = 10;
-          return a + (e_score - 4)*(b-a)/(93.4 - 4);
+          return b - (a + (e_score - 4)*(b-a)/(93.4 - 4));
         }
         
         var continuousScaleLegend = L.Control.extend({

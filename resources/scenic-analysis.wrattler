@@ -9,10 +9,6 @@ with areas ranging between 0.018 square km to 684 square km.
 
 Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
 
-
-
-
-
 ```python
 %global constants.py
 %global utils.py
@@ -34,7 +30,6 @@ crime_data.drop(columns=months_with_nans, inplace=True)
 
 # major crime types are parents to minor categories
 major_counts_per_LSOA_per_month = crime_data.groupby(by=[JOINING_KEY, "Major Category"]).sum().astype('float').reset_index().rename(columns={"Major Category":"crime_category"})
-
 minor_counts_per_LSOA_per_month = crime_data.drop(columns="Major Category").rename(columns={"Minor Category":"crime_category"})
 
 # count crimes regardless of category for each LSOA (and check we have recordings on a monthly basis)
@@ -140,21 +135,34 @@ if predictions.isnull().values.any():
 
 
 
+
+
+
+
 ```python
 df = pd.concat([depriv_indices.set_index(JOINING_KEY), 
                 population_density.set_index(JOINING_KEY), 
                 predictions.set_index(JOINING_KEY)], axis=1, sort=True)
 df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna()
+
+crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
+
+# Visualisation
+
+```javascript
+// addOutput(function(myDiv) {
+
+
+// });
+```
+
+# Poisson Analysis
+
 ```r
 install.packages("AER")
 library(AER)
 
-setwd("resources")
-
-df = read.csv("crime_df_516bca099ea145f2840eea6385f0a17089c2bf1f_15_10_19.csv")
-crime_subset_df = df[ which(df$crime_category=='major_burglary'), ]
-
 #Run Poisson Model
-#summary(m1 <- glm(crime_count ~ predicted_score_nn, family="poisson", data=crime_subset_df))
+print(summary(m1 <- glm(crime_count ~ scenic_rating, family="poisson", data=crime_subset_df)))
 ```

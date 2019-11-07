@@ -9,6 +9,8 @@ with areas ranging between 0.018 square km to 684 square km.
 
 Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
 
+
+
 ```python
 %global constants.py
 %global utils.py
@@ -52,10 +54,14 @@ counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index
 
 
 
+
+
 ## Indices of deprivation & population density data
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
+
 
 
 
@@ -93,10 +99,14 @@ if population_density.isnull().values.any():
 
 
 
+
+
 ## Scenic ratings
 
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
 These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
+
 
 
 
@@ -123,7 +133,11 @@ if predictions.isnull().values.any():
 
 
 
+
+
 ## Combining the datasets
+
+
 
 
 
@@ -147,22 +161,86 @@ df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna()
 
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
-
 # Visualisation
-
 ```javascript
 // addOutput(function(myDiv) {
 
 
 // });
 ```
+# Quantitative Analysis
 
-# Poisson Analysis
+We now look to better quantify the relationship between the occurrence of crime and the scenicness of the area.
+To do this we can perform Poisson regression, a generalised linear model (glm) form of regression analysis used 
+to model count data.
 
+### What is count based data?
+
+Count based data contains events that occur at a certain rate, and this rate may change over time. 
+Count based data tends to has the following characteristics:
+* the data consists of **non negative integers**
+* **skewed distribution** - may contain a large number of data points for just a few values
+* **sparsity** - may reflect the occurrence of a rare event
+* **rate of occurrence** - assumption that there is a certain rate of occurrences of events that drives the 
+generation of such data and this may drift overtime.
+
+### Poisson regression model
+
+If the event rate (in our case, rate of crime occurrences) can change from one observation to the next, 
+we can assume that the value of the rate is influenced by a vector of explanatory/predictor variables.
+In a Poisson regression model, the event counts are assumed to be Poisson distributed, 
+which means the probability of observing the event counts is a function of the event rate vector.
+
+<!-- The Poisson regression model fits the observed counts to the explanatory variables matrix via a **link-function** 
+that expresses the rate vector as a function of the regression coefficients and the explanatory variables matrix.
+As a link function, it uses the exponential-link function, which keeps the event rate non negative event when the
+explanatory variables or regression coefficients have negative values. -->
+
+### Negative Binomial regression model
+
+The expected value (i.e. mean) and the variance of the Poisson distribution is the event rate. 
+However, this condition is often violated by real world data. 
+The negative binomial regression model does not make this *mean = variance* assumption about the data.
+[Here](https://data.princeton.edu/wws509/r/overdispersion) is a useful link discussing how to analyse the 
+output of R.
 ```r
 install.packages("AER")
 library(AER)
 
-#Run Poisson Model
-print(summary(m1 <- glm(crime_count ~ scenic_rating, family="poisson", data=crime_subset_df)))
+# Run Poisson Model
+print(summary(m1 <- glm(crime_count ~ scenic_rating, 
+                        family="poisson", 
+                        data=crime_subset_df)))
+
+# Add Deprivation Scores
+print(summary(m2 <- glm(crime_count ~ scenic_rating + 
+                                      income_score_rate + 
+                                      employment_score_rate + 
+                                      education_skills_and_training_score + 
+                                      health_deprivation_and_disability_score + 
+                                      barriers_to_housing_and_services_score +
+                                      living_environment_score, 
+                        family="poisson", 
+                        data=crime_subset_df)))
+
+# Add Population Density
+print(summary(m3 <- glm(crime_count ~ scenic_rating + 
+                                      income_score_rate + 
+                                      employment_score_rate + 
+                                      education_skills_and_training_score + 
+                                      health_deprivation_and_disability_score + 
+                                      barriers_to_housing_and_services_score +
+                                      living_environment_score + 
+                                      population_density_area_hectares, 
+                        family="poisson", data=crime_subset_df)))
+
+# Check for overdispersion
+print(dispersiontest(m1))
+
+print(dispersiontest(m2))
+
+print(dispersiontest(m3))
+
+print(var(crime_subset_df$crime_count)/mean(crime_subset_df$crime_count))
+
 ```

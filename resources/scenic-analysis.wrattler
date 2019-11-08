@@ -6,11 +6,6 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
-
-Although most of the subsequent analysis will be implemented in R and visualised using JavaScript, Wrattler allows us the option to conveniently use Python to load and format the data.
-
-
-
 ```python
 %global constants.py
 %global utils.py
@@ -173,13 +168,13 @@ crime_subset_df = df[df["crime_category"] == "total_count"]
 # Quantitative Analysis
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
-To do this, we can investigate a couple of approaches towards analysing this kind of data.
+To do this, we can investigate a couple of approaches for analysing this kind of data.
 
 ### What is count based data?
 
 Count based data contains events that occur at a certain rate, and this rate may change over time. 
-Count based data tends to has the following characteristics:
-* the data consists of *non negative integers*
+It tends to have the following characteristics:
+* consists of *non negative integers*
 * *skewed distribution* - may contain a large number of data points for just a few values
 * *sparsity* - may reflect the occurrence of a rare event
 * *rate of occurrence* - assumption that there is a certain rate of occurrences of events that drives the 
@@ -192,7 +187,7 @@ Since [Possion distributed](https://towardsdatascience.com/the-poisson-distribut
 data is instrinsically integer-valued, Poisson regression models are commonly used to model count data.
 
 If the event rate (i.e. rate of crime occurrences) can change from one observation to the next, 
-we can assume that the value of the rate is influenced by explanatory or predictor variables.
+we can assume that the rate is influenced by explanatory or predictor variables.
 In a Poisson regression model the event counts are assumed to be Poisson distributed, 
 which means that the probability of observing the event counts is a function of the event rate vector. 
 Hence, the Poisson regression model fits the observed counts to the explanatory variables matrix via a *link-function*, 
@@ -200,21 +195,18 @@ which expresses the rate vector as a function of the regression coefficients and
 It uses the exponential-link (or [log-link](https://www.theanalysisfactor.com/count-models-understanding-the-log-link-function/)) function, 
 which keeps the predicted values non negative when the explanatory variables or regression coefficients have negative values.
 
-### Overdispersion of data
+### Overdispersion
 
 The mean and variance of the Poisson distribution are assumed to be the same, and equal to the event rate (see [proof](https://llc.stat.purdue.edu/2014/41600/notes/prob1804.pdf)). 
 However, in practise, this is often violated by real world data and the 
-observed variance is usually larger than its mean - this is referred to as *overdispersion*.
-Running an overdispersed Poisson model will generate understated standard errors, leading to invalid conclusions.
-[Here](https://data.princeton.edu/wws509/r/overdispersion) is a useful link discussing how to analyse the output of R with respect to overdispersion.
+observed variance is usually larger than its mean - this is referred to as [*overdispersion*](https://data.princeton.edu/wws509/r/overdispersion).
+Performing Poisson regression on count data that exhibits this will result in a model that doesn’t fit well.
 
 ### Negative Binomial regression model
 
-The negative binomial regression model does not make this *mean = variance* assumption about the data.
-[Here](https://data.princeton.edu/wws509/r/overdispersion) is a useful link discussing how to analyse the 
-output of R.
-
-
+The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
+does not make this *mean = variance* assumption about the data. 
+The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
 ```r
 install.packages("AER")
 library(AER)
@@ -248,4 +240,17 @@ print(summary(m3 <- glm(crime_count ~ scenic_rating +
 
 # Check for overdispersion
 print(dispersiontest(m1))
+```
+```r
+library(MASS)
+
+print(summary(mnb <- glm.nb(crime_count ~ scenic_rating + 
+                            income_score_rate + 
+                            employment_score_rate + 
+                            education_skills_and_training_score + 
+                            health_deprivation_and_disability_score + 
+                            barriers_to_housing_and_services_score + 
+                            living_environment_score + 
+                            population_density_area_hectares, 
+              data=crime_subset_df)))
 ```

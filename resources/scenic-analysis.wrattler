@@ -6,6 +6,7 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
+
 ```python
 %global constants.py
 %global utils.py
@@ -40,31 +41,16 @@ counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_inde
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 ```
 
-
-
-
-
-
-
-
 ## Indices of deprivation & population density data
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
 
-
-
-
-
-
-
-
-
 ```python
 depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
 
 # make sure to remove all indices 'directly' relating to crime, and columns containing rank or decile extra info
-drop_cols = [c for s in ["crime", "rank", "decile"] for c in depriv_indices.columns if s in c.lower()]
+drop_cols = [c for s in ["crime", "rank", "decile", "authority"] for c in depriv_indices.columns if s in c.lower()]
 depriv_indices.drop(columns=drop_cols, inplace=True)
 
 depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
@@ -85,28 +71,10 @@ if population_density.isnull().values.any():
     population_density.dropna(inplace=True)
 ```
 
-
-
-
-
-
-
-
 ## Scenic ratings
 
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
 These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
-
-
-
-
-
-
-
-
-
-
-
 
 ```python
 predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
@@ -119,45 +87,26 @@ if predictions.isnull().values.any():
     predictions.dropna(inplace=True)
 ```
 
-
-
-
-
-
-
-
 ## Combining the datasets
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ```python
 df = pd.concat([depriv_indices.set_index(JOINING_KEY), 
                 population_density.set_index(JOINING_KEY), 
                 predictions.set_index(JOINING_KEY)], axis=1, sort=True)
-df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna()
+
+df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rename(columns={"index":JOINING_KEY})
 
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
 
-
-
 # Visualisation
 
+Having loaded the crime data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
+to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as visually inspect the measures of deprivation
+across different LSOA codes.
 
+To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
+ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
 
 ```javascript
 // addOutput(function(myDiv) {
@@ -165,13 +114,10 @@ crime_subset_df = df[df["crime_category"] == "total_count"]
 
 // });
 ```
+
 # Quantitative Analysis
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
-To do this, we can investigate a couple of approaches for analysing this kind of data.
-
-### What is count based data?
-
 Count based data contains events that occur at a certain rate, and this rate may change over time. 
 It tends to have the following characteristics:
 * consists of *non negative integers*
@@ -180,18 +126,20 @@ It tends to have the following characteristics:
 * *rate of occurrence* - assumption that there is a certain rate of occurrences of events that drives the 
 generation of such data and this may drift overtime.
 
+We can investigate a couple of approaches for analysing this kind of data.
+
 ### Poisson regression model
 
-Poisson regression is a generalised linear model form of regression analysis. 
-Since [Possion distributed](https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459) 
-data is instrinsically integer-valued, Poisson regression models are commonly used to model count data.
+The [Poisson distribution](https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459) 
+models the probability of event(s) occurring within a specific timeframe, 
+assuming that occurrences are not affected by the timing of previous events. 
+Since Possion distributed data is intrinsically integer-valued, 
+[Poisson regression models](https://www.dataquest.io/blog/tutorial-poisson-regression-in-r/) - which assume event counts to be Poisson distributed - are commonly used to model count data.
 
-If the event rate (i.e. rate of crime occurrences) can change from one observation to the next, 
-we can assume that the rate is influenced by explanatory or predictor variables.
-In a Poisson regression model the event counts are assumed to be Poisson distributed, 
-which means that the probability of observing the event counts is a function of the event rate vector. 
-Hence, the Poisson regression model fits the observed counts to the explanatory variables matrix via a *link-function*, 
-which expresses the rate vector as a function of the regression coefficients and the explanatory variables matrix.
+If the event rate can change from one observation to the next, 
+we assume that the rate is influenced by explanatory or predictor variables.
+The Poisson regression model fits the observed counts to the explanatory variables matrix via a *link-function*, 
+which expresses the rate vector as a function of regression coefficients and the explanatory variables matrix.
 It uses the exponential-link (or [log-link](https://www.theanalysisfactor.com/count-models-understanding-the-log-link-function/)) function, 
 which keeps the predicted values non negative when the explanatory variables or regression coefficients have negative values.
 
@@ -207,6 +155,7 @@ Performing Poisson regression on count data that exhibits this will result in a 
 The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
 does not make this *mean = variance* assumption about the data. 
 The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
+
 ```r
 install.packages("AER")
 library(AER)
@@ -236,7 +185,8 @@ print(summary(m3 <- glm(crime_count ~ scenic_rating +
                                       barriers_to_housing_and_services_score +
                                       living_environment_score + 
                                       population_density_area_hectares, 
-                        family="poisson", data=crime_subset_df)))
+                        family="poisson", 
+                        data=crime_subset_df)))
 
 # Check for overdispersion
 print(dispersiontest(m1))
@@ -245,12 +195,12 @@ print(dispersiontest(m1))
 library(MASS)
 
 print(summary(mnb <- glm.nb(crime_count ~ scenic_rating + 
-                            income_score_rate + 
-                            employment_score_rate + 
-                            education_skills_and_training_score + 
-                            health_deprivation_and_disability_score + 
-                            barriers_to_housing_and_services_score + 
-                            living_environment_score + 
-                            population_density_area_hectares, 
-              data=crime_subset_df)))
+                                          income_score_rate + 
+                                          employment_score_rate + 
+                                          education_skills_and_training_score + 
+                                          health_deprivation_and_disability_score + 
+                                          barriers_to_housing_and_services_score + 
+                                          living_environment_score + 
+                                          population_density_area_hectares, 
+                            data=crime_subset_df)))
 ```

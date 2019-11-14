@@ -31,11 +31,11 @@ ggplot(crime_subset_df, aes(living_environment_score)) + geom_histogram(binwidth
 To first investigate visually whether there might be a relationship between scenicness and crime occurences, we can create bins of the LSOAs according to crime count and then plot/overlay the ratings (e.g. scenicness, income rate, etc.) for each bin in different colours
 
 ```{r}
-#packages.install("mltools")
+#install.packages("mltools")
 library(mltools)
 
 binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
-bin_labels <- as.integer(binned) - 1L
+bin_labels <- as.integer(binned_data) - 1L
 crime_subset_df["label"] <- bin_labels
 
 cols <- c("scenic_rating",

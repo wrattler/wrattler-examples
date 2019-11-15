@@ -167,3 +167,45 @@ QUESTIONS:
 * Does the overdispersion test make the results of the model entirely useless? Does the negative binomial regression model entirely address the previous violation?
 * Is it correct to interpret the best model as the one that (potentially contains a number of the predictors and) is ranked highest when we do some kind of model comparison, such as comparing AIC (or drop in deviance)?
 * From this analysis, is it possible to say anything about the relationship between the predictor variables? Other than being able to say that when we control for X variable, Y is still signifiant.
+
+
+
+So far, the above analysis has only taken into account crime counts irrespective of the type of crime. If we start to explore individual crime types, we see that the *minor* crime of **burglary in a dwelling** is the only crime type where the number of these crimes increases as the **scenic rating increases** (see below - non negative estimate value for scenic rating).
+
+```{r}
+library(AER)
+
+# crime_types <- unique(df$crime_category)
+# print(crime_types)
+# for (i in crime_types) {
+# 
+#   subset_df = df[ which(df$crime_category==i), ]
+#   print(i)
+#   print(summary(m1 <- glm(crime_count ~ scenic_rating+
+#                                 income_score_rate +
+#                                 employment_score_rate +
+#                                 education_skills_and_training_score +
+#                                 health_deprivation_and_disability_score +
+#                                 barriers_to_housing_and_services_score +
+#                                 living_environment_score +
+#                                 population_density_area_hectares,
+#                         family="poisson",
+#                         data=subset_df)))
+# 
+# }
+
+minor_burg_dwell_df = df[ which(df$crime_category=="minor_burglary_in_a_dwelling"),]
+
+summary(m6 <- glm(crime_count ~ scenic_rating +
+                                income_score_rate +
+                                employment_score_rate +
+                                education_skills_and_training_score +
+                                health_deprivation_and_disability_score +
+                                barriers_to_housing_and_services_score +
+                                living_environment_score +
+                                population_density_area_hectares,
+                        family="poisson",
+                        data=minor_burg_dwell_df))
+
+dispersiontest(m6)
+```

@@ -115,14 +115,22 @@ across different LSOA codes.
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
+
 ```javascript
 // addOutput(function(myDiv) {
 
 
 // });
 ```
-The cell below produces further plots of the data, where this time we create bins (quantiles) of the LSOAs according to crime count and
-then plot/overlay the ratings of the variables (e.g. scenicness, income rate, etc.) for each bin in different colours.
+
+The cell below produces further plots of the data, where this time we create bins of the LSOAs according to crime count and
+then plot the ratings of the variables (e.g. scenicness, income rate, etc.).
+
+The four colours in the below plots hence represent different ranges of percentiles of the data according to crime count. 
+* ![#E89005](https://placehold.it/15/E89005/000000?text=+) represents the 0-25th percentile of LSOAs (i.e. have the lowest number of total crimes)
+* ![#2292A4](https://placehold.it/15/2292A4/000000?text=+) represents the 25th-50th
+* ![#485665](https://placehold.it/15/485665/000000?text=+) represents the 50th-75th
+* ![#003B36](https://placehold.it/15/003B36/000000?text=+) represents 75th-100th percentile of LSOAs (i.e. have the highest number of total crimes)
 ```r
 install.packages("mltools")
 install.packages("ggplot2")
@@ -141,9 +149,9 @@ for (i in seq_len(nrow(d))) {
   w <- d[[2]][i]
 
   plot <- ggplot(crime_subset_df, aes_string(feature)) +
-  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
-  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, fill = "#E89005", alpha = 0.9) + # lowest crime count
+  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, fill = "#2292A4", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, fill = "#485665", alpha = 0.9) +
   geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
   print(plot)
 }
@@ -246,7 +254,7 @@ print(summary(m3 <- glm(crime_count ~ scenic_rating +
                         family="poisson", 
                         data=crime_subset_df)))
 
-# # Check for overdispersion
+# Check for overdispersion
 print(dispersiontest(m1))
 ```
 ```r

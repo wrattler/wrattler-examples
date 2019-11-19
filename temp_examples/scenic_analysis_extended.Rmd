@@ -53,9 +53,9 @@ for (i in seq_len(nrow(d))) {
   w <- d[i,]$bin_width
   
   plot <- ggplot(crime_subset_df, aes_string(feature)) +
-  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
-  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w,  fill = "#E89005", alpha = 0.9) + # lowest crime count
+  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, fill = "#2292A4", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, fill = "#485665", alpha = 0.9) +
   geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
   print(plot)
 }

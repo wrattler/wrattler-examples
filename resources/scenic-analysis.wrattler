@@ -107,7 +107,7 @@ df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rena
 
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
-# Visualisation
+# Visualisations
 
 Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
 to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as visually inspect the measures of deprivation
@@ -115,12 +115,38 @@ across different LSOA codes.
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
-
 ```javascript
 // addOutput(function(myDiv) {
 
 
 // });
+```
+The cell below produces further plots of the data, where this time we create bins (quantiles) of the LSOAs according to crime count and
+then plot/overlay the ratings of the variables (e.g. scenicness, income rate, etc.) for each bin in different colours.
+```r
+install.packages("mltools")
+install.packages("ggplot2")
+library(mltools)
+library(ggplot2)
+
+binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
+crime_subset_df["label"] <- as.integer(binned_data) - 1L # bin labels
+
+cols <- c("scenic_rating","population_density_area_hectares","employment_score_rate","education_skills_and_training_score",
+          "income_score_rate","barriers_to_housing_and_services_score","health_deprivation_and_disability_score","living_environment_score")
+d <- data.frame(column = cols, bin_width = c(0.05, 10, 0.05, 1, 0.05, 2, 0.1, 1))
+
+for (i in seq_len(nrow(d))) {
+  feature <- as.character(d[[1]][i])
+  w <- d[[2]][i]
+
+  plot <- ggplot(crime_subset_df, aes_string(feature)) +
+  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
+  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
+  print(plot)
+}
 ```
 
 
@@ -235,36 +261,4 @@ print(summary(mnb <- glm.nb(crime_count ~ scenic_rating +
                                           living_environment_score + 
                                           population_density_area_hectares, 
                             data=crime_subset_df)))
-```
-```r
-install.packages("mltools")
-install.packages("ggplot2")
-library(mltools)
-library(ggplot2)
-
-binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
-crime_subset_df["label"] <- as.integer(binned_data) - 1L # bin labels
-
-cols <- c("scenic_rating",
-          "population_density_area_hectares",
-          "employment_score_rate",
-          "education_skills_and_training_score",
-          "income_score_rate",
-          "barriers_to_housing_and_services_score",
-          "health_deprivation_and_disability_score",
-          "living_environment_score")
-d <- data.frame(column = cols, bin_width = c(0.05, 10, 0.05, 1, 0.05, 2, 0.1, 1))
-
-for (i in seq_len(nrow(d))) {
-
-  feature <- as.character(d[[1]][i])
-  w <- d[[2]][i]
-
-  plot <- ggplot(crime_subset_df, aes_string(feature)) +
-  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
-  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
-  print(plot)
-}
 ```

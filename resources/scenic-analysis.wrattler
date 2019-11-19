@@ -1,23 +1,26 @@
 # Testing the Broken Window hypothesis: are less scenic neighbourhoods linked to more crime?
+<br /> 
+The Broken Window hypothesis proposes that visible signs of crime and civil disorder creates an environment that encourages further crime and disorder.
+The hypothesis has been reponsible for promoting controversial policing policies throughout the 1990s and has remained influential into the 21st century. 
+Perhaps the most notable application of the theory was the adoption of the *stop-and-frisk* practise in New York City. 
+Whilst application of such policies have been linked to decline in crime rates, great skeptism surrounds the validity of such a relationship
+because of other changes taking place at that time, including the number of police officers, periods of economic growth and a reduction in poverty.
 
-## Crime data
+Some believe that social conditions may be a stronger driver of crime than broken windows. 
+In this notebook, we study the relationship between crime rates and scenicness in areas across London, as well as accounting for other indices of deprivation.
+Hence, we use the following data for the analysis:
+1. [Crime data](#crime) - counts of different types of crime in an area
+1. [Indices of deprivation and population density data](#indices) - indicators of deprivation relating to health, employment, housing, etc.
+1. [Scenic ratings across London](#scenic) - measures of scenicness of an area given by a neural network
+
+---
+
+### Crime data<a name="crime">
 
 The first dataset we import is the [MPS LSOA Level Crime (historic)](https://data.london.gov.uk/dataset/recorded_crime_summary) dataset.
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
-
-
-
-
-
-
-
-
-
-
-
-
 ```python
 %global constants.py
 %global utils.py
@@ -51,33 +54,10 @@ counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, 
 counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.mean(), axis=1).values
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-## Indices of deprivation & population density data
+### Indices of deprivation & population density data <a name="indices">
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
-
-
-
-
-
-
-
-
-
-
-
 
 ```python
 depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
@@ -103,34 +83,10 @@ if population_density.isnull().values.any():
     print("Nan values found\n")
     population_density.dropna(inplace=True)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-## Scenic ratings
+### Scenic ratings<a name="scenic">
 
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
 These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
-
-
-
-
-
-
-
-
-
-
-
-
 ```python
 predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
 
@@ -141,32 +97,8 @@ if predictions.isnull().values.any():
     print("Nan values found\n")
     predictions.dropna(inplace=True)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-## Combining the datasets
-
-
-
-
-
-
-
-
-
-
-
-
 ```python
+# join the datasets
 df = pd.concat([depriv_indices.set_index(JOINING_KEY), 
                 population_density.set_index(JOINING_KEY), 
                 predictions.set_index(JOINING_KEY)], axis=1, sort=True)
@@ -175,37 +107,14 @@ df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rena
 
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
-
-
-
-
-
-
-
-
-
-
-
-
 # Visualisation
 
-Having loaded the crime data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
+Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
 to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as visually inspect the measures of deprivation
 across different LSOA codes.
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
-
-
-
-
-
-
-
-
-
-
-
 
 ```javascript
 // addOutput(function(myDiv) {
@@ -213,6 +122,7 @@ ratings of scenicness for specific points in the map (as opposed to an average r
 
 // });
 ```
+
 
 
 
@@ -265,6 +175,7 @@ Performing Poisson regression on count data that exhibits this will result in a 
 The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
 does not make this *mean = variance* assumption about the data. 
 The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
+
 
 
 
@@ -331,8 +242,8 @@ install.packages("ggplot2")
 library(mltools)
 library(ggplot2)
 
-# binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
-# crime_subset_df["label"] <- as.integer(binned_data) - 1L # bin labels
+binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
+crime_subset_df["label"] <- as.integer(binned_data) - 1L # bin labels
 
 cols <- c("scenic_rating",
           "population_density_area_hectares",
@@ -344,19 +255,16 @@ cols <- c("scenic_rating",
           "living_environment_score")
 d <- data.frame(column = cols, bin_width = c(0.05, 10, 0.05, 1, 0.05, 2, 0.1, 1))
 
-# for (i in seq_len(nrow(d))) {
+for (i in seq_len(nrow(d))) {
 
-#   feature <- as.character(d[[1]][i])
-#   w <- d[[2]][i]
+  feature <- as.character(d[[1]][i])
+  w <- d[[2]][i]
 
-#   plot <- ggplot(crime_subset_df, aes_string(feature)) +
-#   geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
-#   geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
-#   geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
-#   geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
-#   print(plot)
-# }
-```
-```r
-
+  plot <- ggplot(crime_subset_df, aes_string(feature)) +
+  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, color=NA, fill = "#E89005", alpha = 0.9) + # lowest crime count
+  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, color=NA, fill = "#2292A4", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, color=NA, fill = "#485665", alpha = 0.9) +
+  geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
+  print(plot)
+}
 ```

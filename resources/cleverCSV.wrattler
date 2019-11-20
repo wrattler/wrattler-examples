@@ -7,6 +7,8 @@ of the CSV file.
 
 First, we load a sample CSV file that uses semicolon as a deliminter:
 
+
+
 ```python
 import requests
 
@@ -17,13 +19,17 @@ demo = requests.get("https://raw.githubusercontent.com/grezesf/" +
 print(demo.content.decode("utf-8"))
 ```
 
+
+
 Now, we try parsing the CSV file using the standard Python CSV parser from the `csv` module.
 This fails with the `csv.Error` exception:
+
+
 
 ```python
 import csv
 
-content1 = demo.values[0][0]
+content1 = demo.values[0][0].decode("utf-8")
 dialect1 = ""
 
 try:
@@ -34,19 +40,23 @@ except csv.Error:
   print("No result from Python CSV sniffer")
 ```
 
+
+
 Next, we try parsing the CSV file using the CleverCSV parser. Note that the code is exactly the
 same - we just need to replace `csv` with `ccsv`!
 
-```python
-import ccsv
 
-content2 = demo.values[0][0]
+
+```python
+import clevercsv
+
+content2 = demo.values[0][0].decode("utf-8")
 dialect2 = ""
 
 try:
-  dialect2 = ccsv.Sniffer().sniff(content2, verbose=True)
+  dialect2 = clevercsv.Sniffer().sniff(content2, verbose=True)
   print("CleverCSV detected: delimiter = %r, quotechar = %r" 
     % (dialect2.delimiter, dialect2.quotechar))
-except ccsv.Error:
+except clevercsv.Error:
   print("No result from CleverCSV sniffer")
 ```

@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_jupyterlab:v0.6
+FROM wrattler/wrattler_jupyterlab:v0.7
 
 EXPOSE 8889
 

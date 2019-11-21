@@ -2,6 +2,6 @@ FROM wrattler/wrattler_r_service:v0.8
 
 EXPOSE 7103
 
-WORKDIR /R_service
+WORKDIR /app
 
 CMD ["Rscript", "app.R"]

@@ -49,7 +49,7 @@ services:
     networks:
     - wrattler_nw
     volumes:
-    - ./resources:/R_service/resources
+    - ./resources:/app/resources
 
   wrattler_racket_service:
     container_name: wrattler_wrattler_racket_service_1

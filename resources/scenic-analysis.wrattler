@@ -9,6 +9,16 @@ with areas ranging between 0.018 square km to 684 square km.
 
 Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
 
+
+
+
+```javascript
+loadInlineStyle(`
+div.cell {
+	width:97%;
+}
+`)
+```
 ```python
 %global constants.py
 %global utils.py
@@ -200,6 +210,8 @@ loadInlineStyle(`
 }
 .leaflet-control-layers-base label {
     margin-bottom: .2rem;
+    font-family: 'Lora', serif;
+    font-size: 14px;
 }
 body {
     font-size: 16px;
@@ -434,7 +446,7 @@ addOutput(function (id) {
         "Average Crime Count per Month": crimeLayer,
         "Scenic Points": new d3Layer()
       };
-      L.control.layers(baseMaps, null, {position: 'bottomleft', collapsed: false}).addTo(leafletMap);
+      L.control.layers(baseMaps, null, {position: 'bottomright', collapsed: false}).addTo(leafletMap);
       leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
     });
 
@@ -494,7 +506,7 @@ addOutput(function (id) {
         this._max = max;
         return;
       },
-      options: {position: 'bottomright'},
+      options: {position: 'bottomleft'},
       onAdd: function(map) {
         var div = L.DomUtil.create('div', 'info legend');
         div.innerHTML = `Scenicness Rating<br>Min (${this._min}) &emsp;&nbsp; Max (${this._max})`;
@@ -518,12 +530,12 @@ addOutput(function (id) {
     var scenicPointsLegend = new continuousScaleLegend(1.5, 6.3);
     var scenicLsoaLegend = new continuousScaleLegend(2.1, 4.8);
 
-    var crimeLegend = L.control({position: 'bottomright'});
+    var crimeLegend = L.control({position: 'bottomleft'});
     crimeLegend.onAdd = function (map) {
-      var div = L.DomUtil.create('div', 'info legend')
-      grades = [55,25,15,7,2]
-      label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"]
-      labels = ['Av. Monthly Crimes'];
+      var div = L.DomUtil.create('div', 'info legend');
+      var grades = [55,25,15,7,2];
+      var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
+      var labels = ['Av. Monthly Crimes'];
       for (var i=0; i<grades.length; i++) {
         labels.push(
         '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);

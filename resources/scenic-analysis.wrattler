@@ -275,9 +275,10 @@ html, body, #wrapper, #map {
 ```
 ```javascript
 //local map-helpers.js
-addOutput(function (id) {
+//local fullscreen.js
+makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, function (id) {
   if (document.getElementById(id).innerHTML.length > 0) return;
-  document.getElementById(id).innerHTML = "<div style='height:650px' id='" + id + "-map'></div>";
+  document.getElementById(id).innerHTML = "<div style='height:calc(100% - 40px);max-width:calc(100% - 40px);margin:20px' id='" + id + "-map'></div>";
 
   /**
    * Load the csv data containing scenic ratings for particular points across london.

@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_python_service:v0.8
+FROM wrattler/wrattler_python_service:v0.9
 
 WORKDIR /app
 

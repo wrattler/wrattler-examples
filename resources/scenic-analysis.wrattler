@@ -21,9 +21,6 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
-
-Although most of the subsequent analysis will be implemented in R, Wrattler allows us the option to conveniently use Python to load and format the data.
-
 ```javascript
 loadInlineStyle(`
 div.cell {
@@ -116,8 +113,13 @@ df = pd.concat([depriv_indices.set_index(JOINING_KEY),
                 
 df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rename(columns={"index":JOINING_KEY})
 
+# first analysis crime counts irrespective of crime type
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
+
+
+
+
 # Visualisations
 
 Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
@@ -535,46 +537,38 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
   });
 });
 ```
-
-The cell below produces further plots of the data, where this time we create bins of the LSOAs according to crime count and
-then plot the ratings of the variables (e.g. scenicness, income rate, etc.).
-
-The four colours in the below plots hence represent different ranges of percentiles of the data according to crime count. 
-* ![#E89005](https://placehold.it/15/E89005/000000?text=+) represents the 0-25th percentile of LSOAs (i.e. have the lowest number of total crimes)
-* ![#2292A4](https://placehold.it/15/2292A4/000000?text=+) represents the 25th-50th
-* ![#485665](https://placehold.it/15/485665/000000?text=+) represents the 50th-75th
-* ![#003B36](https://placehold.it/15/003B36/000000?text=+) represents 75th-100th percentile of LSOAs (i.e. have the highest number of total crimes)
+Below, we use R to plot raw scatter plots of some of the variables against the mean monthly number of crimes.
 ```r
-install.packages("mltools")
-install.packages("ggplot2")
-library(mltools)
+install.packages("reshape2")
+library(reshape2)
 library(ggplot2)
 
-binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
-crime_subset_df["label"] <- as.integer(binned_data) - 1L # bin labels
+long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_monthly_crime_count", "lsoa_name_2011", 
+                                                "n_months", "mean_monthly_crime_count", "crime_category"))
 
-cols <- c("scenic_rating","population_density_area_hectares","employment_score_rate","education_skills_and_training_score",
-          "income_score_rate","barriers_to_housing_and_services_score","health_deprivation_and_disability_score","living_environment_score")
-d <- data.frame(column = cols, bin_width = c(0.05, 10, 0.05, 1, 0.05, 2, 0.1, 1))
+scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) + 
+                      geom_point(size=0.8) + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count")
 
-for (i in seq_len(nrow(d))) {
-  feature <- as.character(d[[1]][i])
-  w <- d[[2]][i]
+pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) + 
+                   geom_point(size=0.8) + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count")
 
-  plot <- ggplot(crime_subset_df, aes_string(feature)) +
-  geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=w, fill = "#E89005", alpha = 0.9) + # lowest crime count
-  geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=w, fill = "#2292A4", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=w, fill = "#485665", alpha = 0.9) +
-  geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=w, fill = "#003B36", alpha = 0.9) # highest crime count
-  print(plot)
-}
+living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) + 
+                        geom_point(size=0.8) + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count")
+
+housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) + 
+                       geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
+
 ```
+
+
+
+
 
 # Quantitative Analysis
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
 Count based data contains events that occur at a certain rate, and this rate may change over time. 
-It tends to have the following characteristics:
+As we've seen in the plots above, it tends to have the following characteristics:
 * consists of *non negative integers*
 * *skewed distribution* - may contain a large number of data points for just a few values
 * *sparsity* - may reflect the occurrence of a rare event
@@ -608,32 +602,34 @@ Performing Poisson regression on count data that exhibits this will result in a 
 ### Negative Binomial regression model
 
 The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
-does not make this *mean = variance* assumption about the data. 
+does not make this *mean == variance* assumption about the data. 
 The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
-
 ```r
 install.packages("AER")
 library(AER)
 
-# Run Poisson Model
+# Run Poisson model with just scenic rating as a predictor variable
 print(summary(m1 <- glm(crime_count ~ scenic_rating, 
-                        family="poisson", 
+                        family="poisson",
                         data=crime_subset_df)))
+# Check for overdispersion
+print(dispersiontest(m1))
 
-# Add Deprivation Scores
+# Add population density data & deprivation scores
 print(summary(m2 <- glm(crime_count ~ scenic_rating + 
                                       income_score_rate + 
                                       employment_score_rate + 
                                       education_skills_and_training_score + 
                                       health_deprivation_and_disability_score + 
                                       barriers_to_housing_and_services_score +
-                                      living_environment_score, 
-                        family="poisson", 
+                                      living_environment_score + 
+                                      population_density_area_hectares, 
+                        family="poisson",
                         data=crime_subset_df)))
+print(dispersiontest(m2))
 
-# Add Population Density
-print(summary(m3 <- glm(crime_count ~ scenic_rating + 
-                                      income_score_rate + 
+# Run Poisson model without scenic rating
+print(summary(m3 <- glm(crime_count ~ income_score_rate + 
                                       employment_score_rate + 
                                       education_skills_and_training_score + 
                                       health_deprivation_and_disability_score + 
@@ -642,10 +638,17 @@ print(summary(m3 <- glm(crime_count ~ scenic_rating +
                                       population_density_area_hectares, 
                         family="poisson", 
                         data=crime_subset_df)))
-
-# Check for overdispersion
-print(dispersiontest(m1))
+print(dispersiontest(m3))
 ```
+By controlling for important covariates, we can obtain more precise estimates of the relationship between scenic rating and number of crimes in an LSOA.
+Above we run three Poisson regression models:
+* reduced model containing just scenic ratings as a predictor variable
+* full model containing scenic rating and the other predictor variables
+* model containing predictor variables excluding scenic rating
+
+Comparing these models should an indication of how much information can there is by including the scenic rating.
+However, the overdispersion tests suggests that the data has variation that is much higher than would be expected (the rule of thumb is that the ratio of deviance to df should be ~1).
+Hence, below we run a negative binomial regression model, which relaxes this *mean==variance* assumption of the Poisson distribution.
 ```r
 library(MASS)
 
@@ -658,4 +661,7 @@ print(summary(mnb <- glm.nb(crime_count ~ scenic_rating +
                                           living_environment_score + 
                                           population_density_area_hectares, 
                             data=crime_subset_df)))
+```
+```r
+
 ```

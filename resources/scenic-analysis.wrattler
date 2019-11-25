@@ -1,19 +1,26 @@
 # Testing the Broken Window hypothesis: are less scenic neighbourhoods linked to more crime?
 <br /> 
 The Broken Window hypothesis proposes that visible signs of crime and civil disorder creates an environment that encourages further crime and disorder.
-The hypothesis has been reponsible for promoting controversial policing policies throughout the 1990s and has remained influential into the 21st century. 
+The hypothesis has been reponsible for promoting controversial policing policies throughout the 1990s. 
 Perhaps the most notable application of the theory was the adoption of the *stop-and-frisk* practise in New York City. 
 Whilst application of such policies have been linked to decline in crime rates, great skeptism surrounds the validity of such a relationship
 because of other changes taking place at that time, including the number of police officers, periods of economic growth and a reduction in poverty.
 
-Some believe that social conditions may be a stronger driver of crime than broken windows. 
-In this notebook, we study the relationship between crime rates and scenicness in areas across London, as well as accounting for other indices of deprivation.
-Hence, we use the following data for the analysis:
-1. [Crime data](#crime) - counts of different types of crime in an area
-1. [Indices of deprivation and population density data](#indices) - indicators of deprivation relating to health, employment, housing, etc.
-1. [Scenic ratings across London](#scenic) - measures of scenicness of an area given by a neural network
+We wish to study the relationship between crime rates and scenicness in areas across London, as well as accounting for other indices of deprivation.
+In this notebook we,
+* [Load and format the datasets](#datasets)
+* [Visually explore the data](#visualisation) using javascript for an interactive visualisation and R to produce scatterplots
+* [Build models](#models) to better quantify the relationship between scenic rating, crime and indices of deprivation
+* [Summarise](#summary) the findings so far and specify further analyses to investigate
 
 ---
+
+# Datasets<a name="datasets">
+
+We use the following data for the analysis:
+1. [Crime data](#crime) - counts of different types of crime in an area
+1. [Indices of deprivation and population density data](#indices) - indicators of deprivation relating to health, employment, housing, income rate, living environment,and education
+1. [Scenic ratings across London](#scenic) - measures of scenicness of an area given by a neural network
 
 ### Crime data<a name="crime">
 
@@ -28,7 +35,6 @@ div.cell {
 }
 `)
 ```
-
 ```python
 %global constants.py
 %global utils.py
@@ -94,7 +100,7 @@ if population_density.isnull().values.any():
 ### Scenic ratings<a name="scenic">
 
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
-These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+The method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
 ```python
 predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
 
@@ -116,19 +122,14 @@ df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rena
 # first analysis crime counts irrespective of crime type
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
-
-
-
-
-# Visualisations
+# Visualisations<a name="visualisation">
 
 Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
-to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as visually inspect the measures of deprivation
+to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as inspect the measures of deprivation
 across different LSOA codes.
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
-
 ```javascript
 //global loader.js
 
@@ -537,7 +538,7 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
   });
 });
 ```
-Below, we use R to plot raw scatter plots of some of the variables against the mean monthly number of crimes.
+Below, we use R to plot raw scatterplots of some of the variables against the mean monthly number of crimes.
 ```r
 install.packages("reshape2")
 library(reshape2)
@@ -559,12 +560,7 @@ housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_a
                        geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
 
 ```
-
-
-
-
-
-# Quantitative Analysis
+# Quantitative Analysis<a name="models">
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
 Count based data contains events that occur at a certain rate, and this rate may change over time. 
@@ -603,20 +599,14 @@ Performing Poisson regression on count data that exhibits this will result in a 
 
 The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
 does not make this *mean == variance* assumption about the data. 
-The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
+The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion,
+and so is a good alternative model to Poisson regression model should the data be overdispersed.
 ```r
 install.packages("AER")
 library(AER)
 
-# Run Poisson model with just scenic rating as a predictor variable
-print(summary(m1 <- glm(crime_count ~ scenic_rating, 
-                        family="poisson",
-                        data=crime_subset_df)))
-# Check for overdispersion
-print(dispersiontest(m1))
-
 # Add population density data & deprivation scores
-print(summary(m2 <- glm(crime_count ~ scenic_rating + 
+print(summary(m1 <- glm(crime_count ~ scenic_rating + 
                                       income_score_rate + 
                                       employment_score_rate + 
                                       education_skills_and_training_score + 
@@ -626,10 +616,10 @@ print(summary(m2 <- glm(crime_count ~ scenic_rating +
                                       population_density_area_hectares, 
                         family="poisson",
                         data=crime_subset_df)))
-print(dispersiontest(m2))
+print(dispersiontest(m1))
 
 # Run Poisson model without scenic rating
-print(summary(m3 <- glm(crime_count ~ income_score_rate + 
+print(summary(m2 <- glm(crime_count ~ income_score_rate + 
                                       employment_score_rate + 
                                       education_skills_and_training_score + 
                                       health_deprivation_and_disability_score + 

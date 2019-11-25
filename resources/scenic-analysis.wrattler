@@ -556,8 +556,8 @@ living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_s
 
 housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) + 
                        geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
-
 ```
+
 # Quantitative Analysis<a name="models">
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
@@ -667,17 +667,18 @@ print(summary(mnb3 <- glm.nb(crime_count ~ income_score_rate +
 print(anova(mnb2, mnb3, test = "Chisq"))
 
 # find variables whose p values dropped
-p_values_with_SR <- select(data.frame(summary(mnb2)$coefficients), 4) # get p values from model with scenic rating
+p_values_with_SR <- data.frame(summary(mnb2)$coefficients)[4] # get p values from model with scenic rating
 p_values_with_SR$variable <- rownames(p_values_with_SR)
 p_values_with_SR <- setNames(p_values_with_SR, c("p-value with", "variable"))
 
-p_values_without_SR <- select(data.frame(summary(mnb3)$coefficients), 4) # get p values from model without scenic rating
+p_values_without_SR <- data.frame(summary(mnb3)$coefficients)[4] # get p values from model without scenic rating
 p_values_without_SR$variable <- rownames(p_values_without_SR)
 p_values_without_SR <- setNames(p_values_without_SR, c("p-value without", "variable"))
 
 p_values <- left_join(p_values_with_SR, p_values_without_SR, by="variable")
 changed_variables <- filter(p_values, `p-value with`/`p-value without` > 10 & `p-value without` <= 0.05)
 ```
+
 The results of the negative binomial regression analysis suggest that the scenic rating of an LSOA exerts a statistically significant effect on the total crime count for that LSOA (p < 0.001),
 and it may not be surpising that lower scenic ratings are linked to higher crime rates.
 By comparing `mnb1` and `mnb2`, we also note that there is evidence to suggest that the significant effect of scenic rating remains after controlling for the other predictor variables.

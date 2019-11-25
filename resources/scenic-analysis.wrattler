@@ -28,19 +28,20 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
+
 ```python
 %global constants.py
 %global utils.py
 import pandas as pd
 
-crime_data = pd.read_csv("resources/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"])
+crime_data = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/MPS_LSOA_Level_Crime_Historic.csv").drop(columns=["Borough"])
 crime_data.rename(columns={"LSOA Code": JOINING_KEY}, inplace=True)
 
 # expand crime category names so we can flatten out categories later
 crime_data["Major Category"] = crime_data["Major Category"].apply(rename_category_for_flattening, category_parent="major")
 crime_data["Minor Category"] = crime_data["Minor Category"].apply(rename_category_for_flattening, category_parent="minor")
 
-# (for now) remove columns/dates that have nan values
+# remove columns/dates that have nan values
 crime_data.drop(columns=columns_with_nans(crime_data.iloc[:,3:]), inplace=True)
 
 # major crime types are parents to minor categories
@@ -62,12 +63,14 @@ counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_inde
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 ```
 
+
 ### Indices of deprivation & population density data <a name="indices">
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
 ```python
-depriv_indices = pd.read_csv("resources/ID 2015 for London exported.csv")
+depriv_indices = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/ID%202015%20for%20London%20exported.csv")
 
 # make sure to remove all indices 'directly' relating to crime, and columns containing rank or decile extra info
 drop_cols = [c for s in ["crime", "rank", "decile", "authority"] for c in depriv_indices.columns if s in c.lower()]
@@ -81,7 +84,7 @@ if depriv_indices.isnull().values.any():
     depriv_indices.dropna(inplace=True)
 ```
 ```python
-population_density = pd.read_csv("resources/lsoa-data.csv", encoding="latin")
+population_density = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/lsoa-data.csv", encoding="latin")
 
 population_density.rename(columns={"Lower Super Output Area": JOINING_KEY, "Population Density;Area (Hectares);": "population_density_area_hectares"}, inplace=True)
 population_density = population_density[["lsoa_code", "population_density_area_hectares"]]
@@ -90,12 +93,14 @@ if population_density.isnull().values.any():
     print("Nan values found\n")
     population_density.dropna(inplace=True)
 ```
+
 ### Scenic ratings<a name="scenic">
 
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
 The method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
 ```python
-predictions = pd.read_csv("resources/Scenic_predictions_google_images.csv", index_col=0)
+predictions = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/Scenic_predictions_google_images.csv", index_col=0)
 
 predictions = predictions[predictions["year"] == 2015].drop(columns="year")
 predictions.rename(columns={"LSOA_code": JOINING_KEY, "Predicted_Score":"scenic_rating"}, inplace=True)

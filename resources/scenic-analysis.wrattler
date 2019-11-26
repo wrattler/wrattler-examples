@@ -135,7 +135,7 @@ ratings of scenicness for specific points in the map (as opposed to an average r
 loadStyle("https://fonts.googleapis.com/css?family=Lora:400,700italic")
 loadStyle("https://unpkg.com/leaflet@0.7.2/dist/leaflet.css")
 loadScript("https://unpkg.com/leaflet@0.7.2/dist/leaflet.js")
-loadScript("http://d3js.org/d3.v3.min.js")
+loadScript("https://d3js.org/d3.v3.min.js")
 loadScript("https://code.jquery.com/jquery-3.4.1.min.js")
 ```
 ```javascript

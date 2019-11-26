@@ -700,6 +700,7 @@ Above we also identified variables whose p-values dropped by at least 10-fold to
 
 - The variable `education_skills_and_training_score` also gains more significance in the reduced model. However, its coefficient suggests that its direction of influence changes: in the model
  with scenic rating information present, lower deprivation of education scores are linked with higher crime rates, but higher scores are linked with higher crime rates in the reduced model.
+
 # To explore further<a name="future">
 
 So far the analysis supports the influence of scenic rating on crime rates in LSOAs across London. 

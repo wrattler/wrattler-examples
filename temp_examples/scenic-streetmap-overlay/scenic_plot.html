@@ -168,7 +168,6 @@
           });
         }
 
-	//$.getJSON("lsoa_boundary_and_crime_data_30_10_19.geojson", function(json){
         $.getJSON("lsoa_boundary_and_crime_data_11_11_19.geojson", function(json) {
           lsoaBoundaries = L.geoJson(json, { // boundary data as well as income, health data etc. info to display
             style: function (feature) {
@@ -407,10 +406,10 @@
         
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info legend')
-          grades = [55,25,15,7,2]
-	  label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"]
-	  labels = ['Av. Monthly Crimes'];
+          var div = L.DomUtil.create('div', 'info legend');
+          var grades = [55,25,15,7,2];
+	  var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
+	  var labels = ['Av. Monthly Crimes'];
 	  for (var i=0; i<grades.length; i++) {
 	    labels.push(
 	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);

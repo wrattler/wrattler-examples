@@ -4,8 +4,8 @@
     <title>Scenic Ratings of London</title>
     <meta charset="utf-8">
     <link href='https://fonts.googleapis.com/css?family=Lora:400,700italic' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="scenic_plot.css">
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="scenic_plot.css">
     <script type="text/javascript" src="scenic_plot.js"></script>
     <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -273,7 +273,7 @@
         
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info legend');
+          var div = L.DomUtil.create('div', 'info legend crime');
           var grades = [55,25,15,7,2];
 	  var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
 	  var labels = ['Av. Monthly Crimes'];
@@ -282,7 +282,6 @@
 	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
 	  }
 	  div.innerHTML = labels.join('<br>');
-          div.style = "height: 200px; width: 135px; line-height: 29px;";
           return div;
 	};
 

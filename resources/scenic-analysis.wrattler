@@ -140,7 +140,7 @@ loadScript("https://code.jquery.com/jquery-3.4.1.min.js")
 ```
 ```javascript
 loadInlineStyle(`
-.info {
+.scenic .info {
     padding: 6px 8px;
     font-size: 20px;
     font-family: 'Lora', serif;
@@ -149,93 +149,41 @@ loadInlineStyle(`
     border-radius: 5px;
     width:200px;
 }
-.info h4 {
+.scenic .info h4 {
     margin: 0 0 5px;
     color: #777;
     font-family: 'Lora', serif;
     font-style:  italic;
     font-weight: 700;
 }
-.legend {
+.scenic .legend {
     text-align: center;
     line-height: 32px;
     color: #777;
     height: 102px;
 }
-.legend i {
+.scenic .legend i {
     width: 18px;
     height: 18px;
     float: left;
     margin-right: 8px;
     opacity: 0.7;
 }
-.band {
+.scenic .band {
     float: left;
     height: 5px;
     background-color: #c9c9c9;
 }
-.leaflet-control-layers-base label {
+.scenic .leaflet-control-layers-base label {
     margin-bottom: .2rem;
     font-family: 'Lora', serif;
     font-size: 14px;
 }
-body {
-    font-size: 16px;
-    font-family: 'Lora', serif;
-}
-b {
-    font-family: 'Lora' !important;
-    font-style:  italic;
-    font-weight: 700;
-}
-h1 {
-    margin: 0 0 5px;
-    color: #000000;
-    font-family: 'Lora', serif;
-    font-style:  italic;
-    font-weight: 700;
-    font-size: 20px;
-}
-h3 {
-    font-family: 'Lora' !important;
-    font-style:  italic;
-    font-weight: 700;
-    color: #3a5a7d;
-    text-decoration: underline;
-    font-size: 16px;
-}
-a:link {
-    color: #3a5a7d;
-    font-style:  italic;
-}
-a:visited {
-    color: #3a5a7d;
-}
-a:hover {
-    color: #3a5a7d;
-    background-color: #d7d7d7;
-}
-a:active {
-    color: #3a5a7d;
-    background-color: #d7d7d7;
-}
-svg {
-    position: relative;
-}
-html, body, #wrapper, #map {
-    height: 100%;
-}
-#wrapper {
-    margin-left: 260px;
-}
-#map {
-    float: left;
-    width: 100%;
-}
-#sidebar {
-    float: left;
-    width: 260px;
-    margin-left: -260px;
+.scenic .crime {
+    height: 200px; 
+    width: 135px; 
+    line-height: 29px;
+    
 }
 `)
 ```
@@ -244,7 +192,7 @@ html, body, #wrapper, #map {
 //local fullscreen.js
 makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, function (id) {
   if (document.getElementById(id).innerHTML.length > 0) return;
-  document.getElementById(id).innerHTML = "<div style='height:calc(100% - 40px);max-width:calc(100% - 40px);margin:20px' id='" + id + "-map'></div>";
+  document.getElementById(id).innerHTML = "<div class='scenic' style='height:calc(100% - 40px);max-width:calc(100% - 40px);margin:20px' id='" + id + "-map'></div>";
 
   /**
    * Load the csv data containing scenic ratings for particular points across london.
@@ -499,7 +447,7 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
 
     var crimeLegend = L.control({position: 'bottomleft'});
     crimeLegend.onAdd = function (map) {
-      var div = L.DomUtil.create('div', 'info legend');
+      var div = L.DomUtil.create('div', 'info legend crime');
       var grades = [55,25,15,7,2];
       var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
       var labels = ['Av. Monthly Crimes'];
@@ -508,7 +456,7 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
         '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
       }
       div.innerHTML = labels.join('<br>');
-      div.style = "height: 200px; width: 135px; line-height: 29px;";
+      //div.style = "height: 200px; width: 135px; line-height: 29px;";
       return div;
     };
 

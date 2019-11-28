@@ -10,7 +10,7 @@ We wish to study the relationship between crime rates and scenicness in areas ac
 In this notebook we,
 * [Load and format the datasets](#datasets)
 * [Visually explore the data](#visualisation) using javascript for an interactive visualisation and R to produce scatterplots
-* [Build models](#models) to begin quantitatively exploring the relationship between scenic rating, crime and indices of deprivation
+* [Build models](#models) to begin quantitatively exploring the relationship between scenic rating, crime and indices of deprivation and [summarise the findings](#summary)
 * [Outlines further analyses to explore](#future) - this analysis is still a work in progress!
 
 ---
@@ -30,6 +30,18 @@ LSOAs are geographic areas with an average population size of 1,600, defined by 
 with areas ranging between 0.018 square km to 684 square km.
 
 ```python
+%global constants.py
+%global utils.py
+import pandas as pd
+
+counts_per_LSOA = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/crime_data_counts_per_LSOA_25_11_19.csv", index_col=0)
+```
+The cell below is to provide documentation as to how we arrived at the preprocessed data loaded above.
+We have chosen to provide the preprocessed data above because of Binder's restriction on the number of rows allowed to be loaded.
+If you wish to run the cell below to arrive at the preprocessed data from scratch, 
+you can uncomment it and comment the cell above (or else Wrattler's tracking of variable dependency will trigger the cell above to also be executed!).
+```python
+"""
 %global constants.py
 %global utils.py
 import pandas as pd
@@ -61,6 +73,7 @@ counts_per_LSOA = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_categ
 counts_per_LSOA["n_months"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.count(), axis=1).values
 counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.mean(), axis=1).values
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
+"""
 ```
 
 
@@ -93,12 +106,11 @@ if population_density.isnull().values.any():
     print("Nan values found\n")
     population_density.dropna(inplace=True)
 ```
-
 ### Scenic ratings<a name="scenic">
 
-Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+Lastly, to obtain a measure of **scenicness** for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+The Scenic-Or-Not dataset contains around 217,000 images of landscapes that cover nearly 95% of the UK - and has 1.5 million ratings of scenicness from members of the public and counting.
 The method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
-
 ```python
 predictions = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/Scenic_predictions_google_images.csv", index_col=0)
 
@@ -493,16 +505,16 @@ library(ggplot2)
 long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_monthly_crime_count", "lsoa_name_2011", 
                                                 "n_months", "mean_monthly_crime_count", "crime_category"))
 
-scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) + 
+scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) +
                       geom_point(size=0.8) + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count")
 
-pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) + 
+pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) +
                    geom_point(size=0.8) + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count")
 
-living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) + 
+living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) +
                         geom_point(size=0.8) + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count")
 
-housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) + 
+housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) +
                        geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
 ```
 
@@ -547,116 +559,158 @@ The [negative binomial regression model](https://data.library.virginia.edu/getti
 does not make this *mean == variance* assumption about the data. 
 The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion,
 and so is a good alternative model to Poisson regression model should the data be overdispersed.
+
 ```r
-install.packages("AER")
 library(AER)
 
+# Run Poisson model with scenic rating only
+print(summary(scenic_only_model <- glm(crime_count ~ scenic_rating, 
+                                       family="poisson",
+                                       data=crime_subset_df)))
+print(dispersiontest(scenic_only_model))
+
 # Add population density data & deprivation scores
-print(summary(m1 <- glm(crime_count ~ scenic_rating + 
-                                      income_score_rate + 
-                                      employment_score_rate + 
-                                      education_skills_and_training_score + 
-                                      health_deprivation_and_disability_score + 
-                                      barriers_to_housing_and_services_score +
-                                      living_environment_score + 
-                                      population_density_area_hectares, 
-                        family="poisson",
-                        data=crime_subset_df)))
-print(dispersiontest(m1))
+print(summary(full_model <- glm(crime_count ~ scenic_rating +
+                                              income_score_rate +
+                                              employment_score_rate +
+                                              education_skills_and_training_score +
+                                              health_deprivation_and_disability_score +
+                                              barriers_to_housing_and_services_score +
+                                              living_environment_score +
+                                              population_density_area_hectares,
+                                family="poisson",
+                                data=crime_subset_df)))
+print(dispersiontest(full_model))
 
 # Run Poisson model without scenic rating
-print(summary(m2 <- glm(crime_count ~ income_score_rate + 
-                                      employment_score_rate + 
-                                      education_skills_and_training_score + 
-                                      health_deprivation_and_disability_score + 
-                                      barriers_to_housing_and_services_score +
-                                      living_environment_score + 
-                                      population_density_area_hectares, 
-                        family="poisson", 
-                        data=crime_subset_df)))
-print(dispersiontest(m2))
+print(summary(pop_dep_model <- glm(crime_count ~ income_score_rate +
+                                                 employment_score_rate +
+                                                 education_skills_and_training_score +
+                                                 health_deprivation_and_disability_score +
+                                                 barriers_to_housing_and_services_score +
+                                                 living_environment_score +
+                                                 population_density_area_hectares,
+                                   family="poisson",
+                                   data=crime_subset_df)))
+print(dispersiontest(pop_dep_model))
 ```
+
 By controlling for important covariates, we can obtain more precise estimates of the relationship between scenic rating and number of crimes in an LSOA.
 Above we run three Poisson regression models:
-* full(er) model containing scenic rating and the other predictor variables
-* reduced model excluding scenic rating as a predictor variable
+* `scenic_only_model` - model containing scenic rating only, with no other predictor variables
+* `full model` - model containing scenic rating and population density and indices of deprivation variables
+* `pop_dep_model` - model containing population density and indices of deprivation, excluding scenic rating as a predictor variable
 
-Comparing these models should give an indication of how much information there is by including the scenic ratings.
+Comparing these models should give an indication of how much information there is by including scenic ratings.
 However, the overdispersion tests suggests that the data has variation that is much higher than would be expected (the rule of thumb is that the ratio of deviance to df should be ~1).
 So below we run a negative binomial regression model which relaxes this *mean == variance* assumption of the Poisson distribution.
+
 ```r
 library(dplyr)
 library(MASS)
+library(car)
 
+# Model with scenic rating only
+print(summary(scenic_only_model <- glm.nb(crime_count ~ scenic_rating,
+                                          data=crime_subset_df)))
 
-print(summary(mnb1 <- glm.nb(crime_count ~ scenic_rating,
-                             data=crime_subset_df)))
+# Add indices of deprivation and population density
+print(summary(full_model <- glm.nb(crime_count ~ scenic_rating +
+                                                 income_score_rate +
+                                                 employment_score_rate +
+                                                 education_skills_and_training_score +
+                                                 health_deprivation_and_disability_score +
+                                                 barriers_to_housing_and_services_score +
+                                                 living_environment_score +
+                                                 population_density_area_hectares,
+                                   data=crime_subset_df)))
 
-print(summary(mnb2 <- glm.nb(crime_count ~ scenic_rating +
-                                           income_score_rate +
-                                           employment_score_rate +
-                                           education_skills_and_training_score +
-                                           health_deprivation_and_disability_score +
-                                           barriers_to_housing_and_services_score +
-                                           living_environment_score +
-                                           population_density_area_hectares,
-                             data=crime_subset_df)))
+# Model without scenic rating
+print(summary(pop_dep_model <- glm.nb(crime_count ~ income_score_rate +
+                                                    employment_score_rate +
+                                                    education_skills_and_training_score +
+                                                    health_deprivation_and_disability_score +
+                                                    barriers_to_housing_and_services_score +
+                                                    living_environment_score +
+                                                    population_density_area_hectares, 
+                                      data=crime_subset_df)))
 
-print(summary(mnb3 <- glm.nb(crime_count ~ income_score_rate +
-                                           employment_score_rate +
-                                           education_skills_and_training_score +
-                                           health_deprivation_and_disability_score +
-                                           barriers_to_housing_and_services_score +
-                                           living_environment_score +
-                                           population_density_area_hectares, 
-                             data=crime_subset_df)))
-
-# drop in deviance test https://bookdown.org/roback/bookdown-bysh/ch-poissonreg.html
-print(anova(mnb2, mnb3, test = "Chisq"))
-
-# find variables whose p values dropped
-p_values_with_SR <- data.frame(summary(mnb2)$coefficients)[4] # get p values from model with scenic rating
-p_values_with_SR$variable <- rownames(p_values_with_SR)
-p_values_with_SR <- setNames(p_values_with_SR, c("p-value with", "variable"))
-
-p_values_without_SR <- data.frame(summary(mnb3)$coefficients)[4] # get p values from model without scenic rating
-p_values_without_SR$variable <- rownames(p_values_without_SR)
-p_values_without_SR <- setNames(p_values_without_SR, c("p-value without", "variable"))
-
-p_values <- left_join(p_values_with_SR, p_values_without_SR, by="variable")
-changed_variables <- filter(p_values, `p-value with`/`p-value without` > 10 & `p-value without` <= 0.05)
+# check for collinearity
+print(vif(full_model))
 ```
 
-The results of the negative binomial regression analysis suggest that the scenic rating of an LSOA exerts a statistically significant effect on the total crime count for that LSOA (p < 0.001),
-and it may not be surpising that lower scenic ratings are linked to higher crime rates.
-By comparing `mnb1` and `mnb2`, we also note that there is evidence to suggest that the significant effect of scenic rating remains after controlling for the other predictor variables.
-However, we want to try and better clarify the importance of scenic rating as a predictor variable.
+# Summary of results<a name="summary">
 
+The results of the negative binomial regression analysis suggests that the scenic rating of an LSOA exerts a statistically significant effect on the total crime count for that LSOA (p < 0.001),
+and in support of the Broken Window hypothesis: lower scenic ratings are linked to higher crime rates.
+From `full_model`, we also note that the significant effect of scenic rating remains after controlling for the other predictor variables.
+
+> ## #1 Significant effect of scenic rating remains after controlling for population density and indices of deprivation
+> ## #2 Lower scenic ratings are linked to higher number of total crime
+
+We want to try and better clarify the importance of scenic rating as a predictor variable. 
 By giving a measure of how well the model fits the data and avoids overfitting, Akaike Information Criterion (AIC) is a common index used to compare models.
- 
-- Indicating a better fit to the data, the model with scenic rating information included `mnb2`, has a lower AIC score than the model without scenic rating information, `mnb3`.
- This gives an initial indication that including the scenic rating does provide valuable information to the model.
+Indicating a better fit to the data, the model with scenic rating included in addition to the other predictor variables (`full_model`), 
+has the lowest AIC score; followed by the model without scenic rating information (`pop_dep_model`), and lastly by the model with only scenic rating (`scenic_only_model`).
+
+> ## #3 Providing scenic ratings along with population density and indices of deprivation results in a model that best fits the data
 
 To examine more subtle changes between the full and reduced models, we can also look at the p-values of coefficients that represent the significance of each variable in the model.
-Above we also identified variables whose p-values dropped by at least 10-fold to see which became more important when scenic ratings were not included.
+For both `full_model` and `pop_dep_model`, we immediately see that neither `income_score_rate` nor `employment_score_rate` exert a statistically significant influence on the number of crime occurences in either model.
+Furthermore, `education_skills_and_training_score` does not exert a statistically significant influence on crime rate once scenic rating is added as a predictor variable to the model (as in `full_model`).
 
-- For both models, we immediately see that neither `income_score_rate` nor `employment_score_rate` exert a statistically significant influence on the number of crime occurences in either model.
- This combination of variables may not be surprising as one can imagine that income and employment scores may be related.
+> ## #4 Income and employment (and education skills) deprivation score rates are not significant predictors of crime rate
 
-- The variables `health_deprivation_and_disability_score`, `barriers_to_housing_and_services_score` and `population_density_area_hectares` gained more significance in the reduced model, 
- their coefficients suggesting that higher scores of such indices and population density are linked to higher crime rates.
+<!-- effect sizes -->
+</br>
 
-- The variable `education_skills_and_training_score` also gains more significance in the reduced model. However, its coefficient suggests that its direction of influence changes: in the model
- with scenic rating information present, lower deprivation of education scores are linked with higher crime rates, but higher scores are linked with higher crime rates in the reduced model.
-
+---
 # To explore further<a name="future">
 
-So far the analysis supports the influence of scenic rating on crime rates in LSOAs across London. 
-However, the analysis is still a work in progress and still needs to further explore the relationship with respect to the other indices of deprivation in particular.
+- **Relationship between predictor variables**
 
- - The changes in regression coefficients of the variable `education_skills_and_training_score` 
- suggesting the reverse relationship, is potentially suprising and requires more investigation - [Simpson's Paradox?](https://towardsdatascience.com/solving-simpsons-paradox-e85433c68d03)
- - Can we identify explanations for why those other three variables change significance when scenic rating is removed.
- - Following those above to points, **collinearity**: one of the main challenges of this analysis is the probable interrelation/correlation of many of the predictor variables, 
- which makes it more difficult to extract individual effects of each variable - we have not yet performed directs test of collinearity.
- - Investigate **individual types of crime**: we currently have crime data relating to major and minor crime types; the analysis so far has only looked at crime rate irrespective of the type.
+ Collinearity is a condition in which some of the predictor variables are highly correlated, which makes it more difficult to extract individual effects of each variable.
+ The observation of income and employment deprivation scores not exerting a significant influence on crime rate 
+ may not be surprising as one can imagine that income and employment scores may be related to one other (or indeed one of the other predictors), and a test for collinearity did confirm that these 
+ variables had higher VIF values. Further study could involve exploring the relationships between each of the predictor variables further.
+
+- **Individual types of crime**
+
+ The analysis so far has looked at crime rate irrespective of the type of crime. 
+However, the different *families* of crime may show differences. 
+For example, below we see that the `minor` crime of `burglary in a dwelling` is the only type that shows a different direction of relationship of scenic rating to crime count - that is,
+
+ >## #5 Exceptions to the Broken Window hypothesis - higher scenic ratings are associated with more (minor) burglaries in a dwelling
+
+ This finding is also intuitive - more scenic or **fancier** places attract more burglaries - and suggests that there are exceptions to the Broken Window hypothesis
+```r
+library(AER)
+
+for (i in unique(df$crime_category)) {
+        subset_df = subset(df, crime_category==i)
+        print(i)
+        print(summary(m_i <- glm(crime_count ~ scenic_rating +
+                                              income_score_rate +
+                                              employment_score_rate +
+                                              education_skills_and_training_score +
+                                              health_deprivation_and_disability_score +
+                                              barriers_to_housing_and_services_score +
+                                              living_environment_score +
+                                              population_density_area_hectares,
+                                family="poisson",
+                                data=subset_df)))
+}
+
+minor_burg_dwell_df = subset(df, crime_category=="minor_burglary_in_a_dwelling")
+print(summary(burg_dwelling_model <- glm(crime_count ~ scenic_rating +
+                                      income_score_rate +
+                                      employment_score_rate +
+                                      education_skills_and_training_score +
+                                      health_deprivation_and_disability_score +
+                                      barriers_to_housing_and_services_score +
+                                      living_environment_score +
+                                      population_density_area_hectares,
+                        family="poisson",
+                        data=minor_burg_dwell_df)))
+print(dispersiontest(burg_dwelling_model))
+```

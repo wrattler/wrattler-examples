@@ -533,33 +533,31 @@ We can investigate a couple of approaches for analysing this kind of data.
 
 ### Poisson regression model
 
-The [Poisson distribution](https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459) 
-models the probability of event(s) occurring within a specific timeframe, 
+The Poisson regression model is a generalized linear model where the response/event count is assumed to have a Poisson distribution conditional on a weighted sum of predictors.
+The Poisson distribution models the probability of events occurring within a specific timeframe, 
 assuming that occurrences are not affected by the timing of previous events. 
-Since Possion distributed data is intrinsically integer-valued, 
-[Poisson regression models](https://www.dataquest.io/blog/tutorial-poisson-regression-in-r/) - which assume event counts to be Poisson distributed - are commonly used to model count data.
+Since Possion distributed data is intrinsically integer-valued, Poisson regression models, are commonly used to model count data.
 
-If the event rate can change from one observation to the next, 
-we assume that the rate is influenced by explanatory or predictor variables.
-The Poisson regression model fits the observed counts to the explanatory variables matrix via a *link-function*, 
-which expresses the rate vector as a function of regression coefficients and the explanatory variables matrix.
-It uses the exponential-link (or [log-link](https://www.theanalysisfactor.com/count-models-understanding-the-log-link-function/)) function, 
-which keeps the predicted values non negative when the explanatory variables or regression coefficients have negative values.
+If the event rate can change from one observation to the next, we assume that the rate is influenced by predictor variables.
+The Poisson regression model fits the observed event counts to the predictor variables matrix via a *link-function*, 
+which expresses the rate vector as a function of regression coefficients and the predictor variables matrix.
+It uses the exponential-link (or 'log-link') function, 
+which keeps the predicted values non negative when the predictor variables or regression coefficients have negative values.
 
 ### Overdispersion
 
-The mean and variance of the Poisson distribution are assumed to be the same, and equal to the event rate (see [proof](https://llc.stat.purdue.edu/2014/41600/notes/prob1804.pdf)). 
-However, in practise, this is often violated by real world data and the 
-observed variance is usually larger than its mean - this is referred to as [*overdispersion*](https://data.princeton.edu/wws509/r/overdispersion).
+One potential drawback of Poisson regression is that it may not accurately describe the variability of the counts.
+The mean and variance of the Poisson distribution are assumed to be the same (and equal to the event rate).
+However, in practise this is often violated by real world data and the 
+observed variance is usually larger than its mean - this is referred to as *overdispersion*.
 Performing Poisson regression on count data that exhibits this will result in a model that doesn’t fit well.
 
 ### Negative Binomial regression model
 
-The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
-does not make this *mean == variance* assumption about the data. 
-The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion,
-and so is a good alternative model to Poisson regression model should the data be overdispersed.
-
+The negative binomial regression model does not make this *mean == variance* assumption about the data. 
+The negative binomial distribution, like the Poisson distribution, describes the probabilities of the occurrence of whole numbers greater than or equal to 0.
+However, the variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion,
+and so is a good alternative model to Poisson regression should the data be overdispersed.
 ```r
 library(AER)
 

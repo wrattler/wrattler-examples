@@ -6,13 +6,13 @@ Perhaps the most notable application of the theory was the adoption of the *stop
 Whilst application of such policies have been linked to decline in crime rates, great skeptism surrounds the validity of such a relationship
 because of other changes taking place at that time, including the number of police officers, periods of economic growth and a reduction in poverty.
 
-We wish to study the relationship between crime rates and scenicness in areas across London, as well as accounting for other indices of deprivation.
+We wish to study the relationship between crime rates and scenicness in areas across London, while controlling for other factors that could be linked with crimes, such as income and employment deprivation and population density.
 Specifically, we want to test the hypothesis that less scenic areas will be linked to higher rates of crimes.
 In this notebook we,
 * [Load and format the datasets](#datasets)
 * [Visually explore the data](#visualisation) using javascript for an interactive visualisation and R to produce scatterplots
 * [Build models](#models) to begin quantitatively exploring the relationship between scenic rating, crime and indices of deprivation and [summarise the findings](#summary)
-* [Outlines further analyses to explore](#future) - this analysis is still a work in progress!
+* [Outlines further analyses to explore](#future) - this analysis is a work in progress
 
 ---
 
@@ -29,7 +29,6 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
-
 ```python
 %global constants.py
 %global utils.py
@@ -76,13 +75,10 @@ counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_inde
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 """
 ```
-
-
 ### Indices of deprivation & population density data <a name="indices">
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
-In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
-
+When loaded in, higher values of each indice of deprivation indicate higher levels of deprivation for that area. In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
 ```python
 depriv_indices = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/ID%202015%20for%20London%20exported.csv")
 
@@ -107,15 +103,13 @@ if population_density.isnull().values.any():
     print("Nan values found\n")
     population_density.dropna(inplace=True)
 ```
-
 ### Scenic ratings<a name="scenic">
 
 Lastly, to obtain a measure of **scenicness** for each LSOA, we load predictions
-made by a Convolutional Neural Network (CNN) that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
+made by a Convolutional Neural Network (CNN) that was trained on Scenic-Or-Not data on Google Street View images. 
 The Scenic-Or-Not dataset contains around 217,000 images of landscapes that cover nearly 95% of the UK - and has 1.5 million ratings of scenicness from members of the public and counting.
-In order to improve the performance for Google Street View images, this CNN is further trained on the 6,946 Google Street View images.
+In order to improve the performance for Google Street View images, this CNN was further trained on the 6,946 Google Street View images.
 The full method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
-
 ```python
 predictions = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/Scenic_predictions_google_images.csv", index_col=0)
 
@@ -139,9 +133,9 @@ crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
 # Visualisations<a name="visualisation">
 
-Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
-to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as inspect the measures of deprivation
-across different LSOA codes.
+Having loaded the data, we're first going to build a javascript visualisation using `d3` and `leaflet js` to qualitatively see whether there might be a relationship between crime counts and scenicness, 
+as well as inspect the measures of deprivation across different LSOA codes. 
+Here, we invert the indices of deprivation so that when shown on the plot in the form of scale bars, fuller bars indicate less deprivation.
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
@@ -520,36 +514,36 @@ long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_
                                                 "n_months", "mean_monthly_crime_count", "crime_category"))
 
 scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count") + 
-                      geom_smooth(method = 'lm', color="darkred")
+                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count") + 
+                      geom_smooth(method="lm", color="darkred")
 
 pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) +
-                   geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count") +
-                   geom_smooth(method = 'lm', color="darkred")
+                   geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count") +
+                   geom_smooth(method="lm", color="darkred")
 
 living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                        geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count") +
-                        geom_smooth(method = 'lm', color="darkred")
+                        geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count") +
+                        geom_smooth(method="lm", color="darkred")
 
 housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                       geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count") +
-                       geom_smooth(method = 'lm', color="darkred")
+                       geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count") +
+                       geom_smooth(method="lm", color="darkred")
 
 educ_plot <- ggplot(data = subset(long_data, variable=="education_skills_and_training_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                    geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("educations/skills and training score") + xlab("mean monthly crime count") +
-                    geom_smooth(method = 'lm', color="darkred")
+                    geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("educations/skills and training score") + xlab("mean monthly crime count") +
+                    geom_smooth(method="lm", color="darkred")
 
 health_plot <- ggplot(data = subset(long_data, variable=="health_deprivation_and_disability_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("health deprivation and disability score") + xlab("mean monthly crime count") +
-                      geom_smooth(method = 'lm', color="darkred")
+                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("health deprivation and disability score") + xlab("mean monthly crime count") +
+                      geom_smooth(method="lm", color="darkred")
 
 employ_plot <- ggplot(data = subset(long_data, variable=="employment_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("employment score rate") + xlab("mean monthly crime count") +
-                      geom_smooth(method = 'lm', color="darkred")
+                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("employment score rate") + xlab("mean monthly crime count") +
+                      geom_smooth(method="lm", color="darkred")
 
 income_plot <- ggplot(data = subset(long_data, variable=="income_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("income score rate") + xlab("mean monthly crime count") +
-                      geom_smooth(method = 'lm', color="darkred")
+                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("income score rate") + xlab("mean monthly crime count") +
+                      geom_smooth(method="lm", color="darkred")
 ```
 
 
@@ -694,7 +688,6 @@ Furthermore, `education_skills_and_training_score` does not exert a statisticall
 
 > ## #4 Income and employment (and education skills) deprivation score rates are not significant predictors of crime rate
 
-<!-- effect sizes -->
 </br>
 
 ---
@@ -715,7 +708,7 @@ For example, below we see that the `minor` crime of `burglary in a dwelling` is 
 
  >## #5 Exceptions to the Broken Window hypothesis - higher scenic ratings are associated with more (minor) burglaries in a dwelling
 
- This finding is also intuitive - more scenic or **fancier** places attract more burglaries - and suggests that there are exceptions to the Broken Window hypothesis
+ This finding is also intuitive - more scenic or **fancier** places attract more burglaries - and suggests that there are exceptions to the Broken Window hypothesis!
 ```r
 library(AER)
 

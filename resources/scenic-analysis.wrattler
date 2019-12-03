@@ -501,7 +501,16 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
   });
 });
 ```
-Below, we use R to plot raw scatterplots of some of the variables against the mean monthly number of crimes.
+Below, we use R to plot raw scatterplots of the predictor variables against the mean monthly number of crimes. 
+For more discrete predictor variables, such as employment score rate and income score rate, we show barcharts instead.
+
+* As initial support for the current hypothesis that less scenic areas may be associated with more crime, 
+we see that scenic rating generally decreases with higher mean monthly crime counts.
+* Furthermore, we see general trends of increasing levels of deprivation with higher mean monthly crime counts.
+* The boundaries of LSOAs were originally selected to be similar in population size whilst maintaining a representative coherent sample regarding social conditions.
+This explains why we mostly observe fairly similar population sizes regardless of mean monthly crime count,
+with perhaps a slight trend of increasing population size with higher mean monthly crime counts.
+* It's also noteable that there are few LSOAs which have high mean monthly crime counts (the majority are clustered around 10-20), thankfully and as one might expect.
 ```r
 install.packages("reshape2")
 library(reshape2)
@@ -511,17 +520,38 @@ long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_
                                                 "n_months", "mean_monthly_crime_count", "crime_category"))
 
 scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(size=0.8) + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count")
+                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count") + 
+                      geom_smooth(method = 'lm', color="darkred")
 
 pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) +
-                   geom_point(size=0.8) + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count")
+                   geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count") +
+                   geom_smooth(method = 'lm', color="darkred")
 
 living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                        geom_point(size=0.8) + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count")
+                        geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count") +
+                        geom_smooth(method = 'lm', color="darkred")
 
 housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) +
-                       geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
+                       geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count") +
+                       geom_smooth(method = 'lm', color="darkred")
+
+educ_plot <- ggplot(data = subset(long_data, variable=="education_skills_and_training_score"), aes(x=mean_monthly_crime_count, y=value)) +
+                    geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("educations/skills and training score") + xlab("mean monthly crime count") +
+                    geom_smooth(method = 'lm', color="darkred")
+
+health_plot <- ggplot(data = subset(long_data, variable=="health_deprivation_and_disability_score"), aes(x=mean_monthly_crime_count, y=value)) +
+                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("health deprivation and disability score") + xlab("mean monthly crime count") +
+                      geom_smooth(method = 'lm', color="darkred")
+
+employ_plot <- ggplot(data = subset(long_data, variable=="employment_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
+                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("employment score rate") + xlab("mean monthly crime count") +
+                      geom_smooth(method = 'lm', color="darkred")
+
+income_plot <- ggplot(data = subset(long_data, variable=="income_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
+                      geom_point(alpha = 4/20, color = 'darkorange') + xlim(0, 50) + ylab("income score rate") + xlab("mean monthly crime count") +
+                      geom_smooth(method = 'lm', color="darkred")
 ```
+
 
 # Quantitative Analysis<a name="models">
 

@@ -26,3 +26,14 @@ def sequential_months(dates):
 
     n_months = len([dt for dt in dateutil.rrule.rrule(dateutil.rrule.MONTHLY, dtstart=strt_dt, until=end_dt)])
     return n_months == len(dates)
+
+def columns_with_nans(df):
+    """
+    Find names of columns in given pandas dataframe whose rows contain NaN values.
+    
+    :param df: pd DataFrame (with integer columns)
+    :return: (set) columns  
+    """
+    nans = lambda dataframe: dataframe[dataframe.isnull().any(axis=1)]
+    months_with_nans = set(nans(df).columns) - set(nans(df).dropna(axis="columns").columns)
+    return months_with_nans

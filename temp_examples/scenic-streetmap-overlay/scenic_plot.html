@@ -4,10 +4,10 @@
     <title>Scenic Ratings of London</title>
     <meta charset="utf-8">
     <link href='https://fonts.googleapis.com/css?family=Lora:400,700italic' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="scenic_plot.css">
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="scenic_plot.css">
+    <script type="text/javascript" src="scenic_plot.js"></script>
     <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
-    <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
   </head>
@@ -15,69 +15,25 @@
     <div id="map"> </div>
     <script>
 
-      function percToColour(perc, min, max) {
-	/**
-	 * Min-max feature scaling: scale a percentage to be between 0-100
-	 * and return according hex colour, rendering from red to yellow to green. 
-	 *
-	 * @param  {Number} perc Percentage to scale
-	 * @param  {Number} min  Minimum perc value
-	 * @param  {Number} max  Maximum perc value
-	 * @return {String}      Scaled hex colour
-	 */
-	if(arguments.length < 3)
-	  throw "Insufficient number of parameters passed.";
-	
-	var a = 0, b = 100;
-	perc = a + (perc - min)*(b-a)/(max - min);
-	
-	var r, g, b = 0;
-	if(perc < 50) {
-	  r = 255;
-	  g = Math.round(5.1 * perc);
-	} else {
-	  g = 255;
-	  r = Math.round(510 - 5.10 * perc);
-        }
-        var h = r * 0x10000 + g * 0x100 + b * 0x1;
-	return '#' + ('000000' + h.toString(16)).slice(-6);
-      }
-
       /**
        * Load the csv data containing scenic ratings for particular points across london. 
        * These values are the average rating of ~four viewpoints across 360 degrees per point. 
        * The data is converted to geojson so we can easily extract the coordinates of points, 
        * and the library d3 is used to help display the (~130000) points
-       */
+       **/
 
       var now_showing=0;
 
       d3.csv('mean_scenic_rating_per_locid_30_10_19.csv', function (error, scenic) {
-	function reformat(array) {
-	  var data = [];
-	  array.map(function (d, i) {
-	    data.push({
-	      id: i,
-	      type: "Feature",
-	      properties: {
-		scenic_rating: d.mean_rating_per_locid,
-	      },
-	      geometry: {
-		coordinates: [+d.lon, +d.lat],
-		type: "Point"
-	      }
-	    });
-	  });
-	  return data;
-	}
         var geoData = {type: "FeatureCollection", features: reformat(scenic)};
 
         var leafletMap = L.map('map').setView([51.505, -.09], 13);
-        var base = new L.StamenTileLayer("toner-lite");
+        var base = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+         });
         leafletMap.addLayer(base);
-
-        // svg appends a d3 layer for rendering svg to the leaflet map
-        var svg = d3.select(leafletMap.getPanes().overlayPane).append("svg");
+        
+        var svg = d3.select(leafletMap.getPanes().overlayPane).append("svg"); // svg appends a d3 layer for rendering svg to the leaflet map
         var g = svg.append("g").attr("class", "leaflet-zoom-hide"); // g keeps SVGs grouped together
 
         function projectPoint(x, y) {
@@ -85,9 +41,11 @@
           this.stream.point(point.x, point.y);
         }
 
-        // Path and transform take regular coords and turn them into svg coords, and
-        // those coords are applied back to the leaflet map layer using the current stream (above)
-        
+        /**
+         * Path and transform take regular coords and turn them into svg coords, and
+         * those coords are applied back to the leaflet map layer using the current stream (above)
+         **/
+
         var transform = d3.geo.transform({
           point: projectPoint
         });
@@ -130,7 +88,7 @@
          * Next load data containing values for multiple variables per LSOA, so this info can be
          * displayed as we rollover and click on an LSOA. These layers have far fewer points 
          * (1 per LSOA), and so are implemented purely in leaflet
-         */
+         **/
 
         function highlightFeature(e) {
           var layer = e.target;
@@ -167,7 +125,7 @@
           });
         }
 
-	$.getJSON("lsoa_boundary_and_crime_data_30_10_19.geojson", function(json){
+        $.getJSON("lsoa_boundary_and_crime_data_11_11_19.geojson", function(json) {
           lsoaBoundaries = L.geoJson(json, { // boundary data as well as income, health data etc. info to display
             style: function (feature) {
               return {
@@ -223,8 +181,7 @@
             },
           });
           
-          // switch between scenic rating per points vs mean per LSOA vs crime counts
-          var baseMaps = {
+          var baseMaps = { // switch between scenic rating per points vs mean per LSOA vs crime counts
             "Average Scenic Ratings per LSOA": sceneryLayer,
             "Average Crime Count per Month": crimeLayer,
             "Scenic Points": new d3Layer()
@@ -236,7 +193,7 @@
         /**
          * Then, add and scale info bars (scenic rating and indices of health, income and employment deprivation) 
          * to show when particular LSOA is clicked on. Each variable has been scaled between 1 and 10.
-         */
+         **/
         
         // custom info control
         var info = L.control();
@@ -279,101 +236,12 @@
         };
         info.addTo(leafletMap);
 
-        function getCrimeColour(crime_count, return_integer=false) {
-          /**
-           * Get the appropariate colour of given number of crimes according
-           * to prespecified bins (red- high counts, blue - low counts).
-           *
-           * @param  {Number} crime_count              Mean num of monthly crime counts
-           * @param  {Bool}   [return_integer = false] Optional param to return integer category for crime count 
-           * @return {String}                          Hex colour for category of counts
-           */
-          if (return_integer) {
-            return crime_count >= 50 ? 10 :
-              crime_count >= 20  ? 7.5 :
-              crime_count >= 10  ? 5 :
-              crime_count >= 5   ? 2.5 :
-              0;
-          }
-          return crime_count >= 50 ? '#a42e3d' :
-            crime_count >= 20  ? '#cb7572' :
-            crime_count >= 10  ? '#7fa4b4' :
-            crime_count >= 5   ? '#0e4b8d' :
-            '#012043';
-        }
-        function getScenicBar(s_rate) {
-          /**
-           * Scale a given mean scenic rating (for an LSOA) to be between 0 and 10, 
-           * according to the max and min in the dataset (2.16 and 4.84, respectively).
-           *
-           * @param  {Number} s_rate Scenic rating to scale
-           * @return {Number}        Scaled scenic rating 
-           */
-          var a = 0, b = 10;
-          return a + (s_rate - 2.16)*(b-a)/(4.84 - 2.16);
-        }
-        function getIncomeBar(inc_rate) {
-          /**
-           * Scale a given income rate to be between 0, and 10, according
-           * to the max and min in the dataset (.5 and 0, respectively).
-           *
-           * @param  {Number} inc_rate Income rate to scale
-           * @return {Number}          Scaled income rate 
-           */
-          var a = 0, b = 10;
-          return b - (a + (inc_rate - 0)*(b-a)/(.5 - 0));
-        }
-        function getHealthBar(h_score) {
-          /**
-           * Scale a given health score to be between 0, and 10, according
-           * to the max and min in the dataset (1.8 and -3.2, respectively).
-           *
-           * @param  {Number} h_score Health to scale
-           * @return {Number}         Scaled health score
-           */
-          var a = 0, b = 10;
-          return b - (a + ((h_score + 3.2) - 0)*(b-a)/((1.8+3.2) - 0));
-        }
-        function getEmploymentBar(e_score) {
-          /**
-           * Scale a given employment score to be between 0, and 10, according
-           * to the max and min in the dataset (.4 and 0, respectively).
-           *
-           * @param  {Number} e_score Employment score to scale
-           * @return {Number}         Scaled employment score
-           */          
-          var a = 0, b = 10;
-          return b - (a + (e_score - 0)*(b-a)/(.4 - 0));
-        }
-        function getEducationBar(e_score) {
-          /**
-           * Scale a given education score to be between 0, and 10, according
-           * to the max and min in the dataset (64 and 0, respectively).
-           *
-           * @param  {Number} e_score Education score to scale
-           * @return {Number}         Scaled education score
-           */          
-          var a = 0, b = 10;
-          return b - (a + (e_score - 0)*(b-a)/(64 - 0));
-        }
-        function getLivingEnvBar(e_score) {
-          /**
-           * Scale a given education score to be between 0, and 10, according
-           * to the max and min in the dataset (93.4 and 4, respectively).
-           *
-           * @param  {Number} e_score Living environment score to scale
-           * @return {Number}         Scaled living environment score
-           */          
-          var a = 0, b = 10;
-          return b - (a + (e_score - 4)*(b-a)/(93.4 - 4));
-        }
-        
         var continuousScaleLegend = L.Control.extend({
           initialize: function(min, max) {
            /**
             * @param {Number} min Min value in data (low end of colour scale)
             * @param {Number} max Max value in data (high end of colour scale)
-            */
+            **/
             this._min = min;
             this._max = max;
             return;
@@ -405,21 +273,19 @@
         
         var crimeLegend = L.control({position: 'bottomright'});
 	crimeLegend.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info legend')
-          grades = [55,25,15,7,2]
-	  label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"]
-	  labels = ['Av. Monthly Crimes'];
+          var div = L.DomUtil.create('div', 'info legend crime');
+          var grades = [55,25,15,7,2];
+	  var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
+	  var labels = ['Av. Monthly Crimes'];
 	  for (var i=0; i<grades.length; i++) {
 	    labels.push(
 	      '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
 	  }
 	  div.innerHTML = labels.join('<br>');
-          div.style = "height: 200px; width: 135px; line-height: 29px;";
           return div;
 	};
 
-        // display appropriate legend as baselayer changes
-        leafletMap.on("baselayerchange", function (event) {
+        leafletMap.on("baselayerchange", function (event) { // display appropriate legend as baselayer changes
           lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
           if (event.name === "Average Crime Count per Month") {
             if (scenicLsoaLegend._map) {

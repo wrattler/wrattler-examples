@@ -1,3 +1,13 @@
+html, body, #wrapper, #map {
+    height: 100%;
+}
+#wrapper {
+    margin-left: 260px;
+}
+#map {
+    float: left;
+    width: 100%;
+}
 .info {
     padding: 6px 8px;
     font-size: 20px;
@@ -13,6 +23,13 @@
     font-family: 'Lora', serif;
     font-style:  italic;
     font-weight: 700;
+}
+.leaflet-control-layers-base label {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+}
+.leaflet-control-layers-expanded {
+    background: rgba(255,255,255,0.6);
 }
 .legend {
     text-align: center;
@@ -32,61 +49,8 @@
     height: 5px;
     background-color: #c9c9c9;
 }
-body {
-    font-size: 16px;
-    font-family: 'Lora', serif;
-}
-b {
-    font-family: 'Lora' !important;
-    font-style:  italic;
-    font-weight: 700;
-}
-h1 {
-    margin: 0 0 5px;
-    color: #000000;
-    font-family: 'Lora', serif;
-    font-style:  italic;
-    font-weight: 700;
-    font-size: 20px;
-}	
-h3 {
-    font-family: 'Lora' !important;
-    font-style:  italic;
-    font-weight: 700;
-    color: #3a5a7d;
-    text-decoration: underline; 
-    font-size: 16px;
-}
-a:link {
-    color: #3a5a7d;
-    font-style:  italic;
-}
-a:visited {
-    color: #3a5a7d;
-}
-a:hover {
-    color: #3a5a7d;
-    background-color: #d7d7d7;
-}
-a:active {
-    color: #3a5a7d;
-    background-color: #d7d7d7;
-}
-svg {
-    position: relative;
-}
-html, body, #wrapper, #map {
-    height: 100%;
-}
-#wrapper {
-    margin-left: 260px;
-}
-#map {
-    float: left;
-    width: 100%;
-}
-#sidebar {
-    float: left;
-    width: 260px;
-    margin-left: -260px;
+.crime {
+    height: 200px;
+    width: 135px;
+    line-height: 29px;
 }

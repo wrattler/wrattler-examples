@@ -29,6 +29,7 @@ The first dataset we import is the [MPS LSOA Level Crime (historic)](https://dat
 This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type. 
 LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses, 
 with areas ranging between 0.018 square km to 684 square km.
+
 ```python
 %global constants.py
 %global utils.py
@@ -36,10 +37,12 @@ import pandas as pd
 
 counts_per_LSOA = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/crime_data_counts_per_LSOA_25_11_19.csv", index_col=0)
 ```
+
 The cell below is to provide documentation as to how we arrived at the preprocessed data loaded above.
 We have chosen to provide the preprocessed data above because of Binder's restriction on the number of rows allowed to be loaded.
 If you wish to run the cell below to arrive at the preprocessed data from scratch, 
 you can uncomment it and comment the cell above (or else Wrattler's tracking of variable dependency will trigger the cell above to also be executed!).
+
 ```python
 """
 %global constants.py
@@ -75,10 +78,12 @@ counts_per_LSOA["mean_monthly_crime_count"] = counts_per_LSOA_per_month.set_inde
 counts_per_LSOA["std_monthly_crime_count"] = counts_per_LSOA_per_month.set_index([JOINING_KEY, "crime_category"]).apply(lambda x : x.std(), axis=1).values
 """
 ```
+
 ### Indices of deprivation & population density data <a name="indices">
 
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 When loaded in, higher values of each indice of deprivation indicate higher levels of deprivation for that area. In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
 ```python
 depriv_indices = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/ID%202015%20for%20London%20exported.csv")
 
@@ -103,6 +108,7 @@ if population_density.isnull().values.any():
     print("Nan values found\n")
     population_density.dropna(inplace=True)
 ```
+
 ### Scenic ratings<a name="scenic">
 
 Lastly, to obtain a measure of **scenicness** for each LSOA, we load predictions
@@ -110,6 +116,7 @@ made by a Convolutional Neural Network (CNN) that was trained on Scenic-Or-Not d
 The Scenic-Or-Not dataset contains around 217,000 images of landscapes that cover nearly 95% of the UK - and has 1.5 million ratings of scenicness from members of the public and counting.
 In order to improve the performance for Google Street View images, this CNN was further trained on the 6,946 Google Street View images.
 The full method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
 ```python
 predictions = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/Scenic_predictions_google_images.csv", index_col=0)
 
@@ -131,6 +138,7 @@ df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rena
 # first analysis crime counts irrespective of crime type
 crime_subset_df = df[df["crime_category"] == "total_count"]
 ```
+
 # Visualisations<a name="visualisation">
 
 Having loaded the data, we're first going to build a javascript visualisation using `d3` and `leaflet js` to qualitatively see whether there might be a relationship between crime counts and scenicness, 
@@ -139,6 +147,7 @@ Here, we invert the indices of deprivation so that when shown on the plot in the
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing 
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
+
 ```javascript
 //global loader.js
 
@@ -495,6 +504,7 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
   });
 });
 ```
+
 Below, we use R to plot raw scatterplots of the predictor variables against the mean monthly number of crimes.
 
 For more discrete predictor variables for which scatterplots are not appropriate, such as employment score rate and income score rate, we create bins of the LSOAs according to crime count and
@@ -504,6 +514,7 @@ The four colours in the below plots hence represent different ranges of percenti
 ![#2292A4](https://placehold.it/15/2292A4/000000?text=+) : 25th-50th,
 ![#485665](https://placehold.it/15/485665/000000?text=+) : 50th-75th,
 ![#003B36](https://placehold.it/15/003B36/000000?text=+) : 75th-100th (i.e. have the highest number of total crimes)).
+
 ```r
 install.packages("reshape2")
 library(reshape2)
@@ -563,7 +574,9 @@ This explains why we mostly observe fairly similar population sizes regardless o
 with perhaps a slight trend of increasing population size with higher mean monthly crime counts.
 * It's also noteable that there are few LSOAs which have high mean monthly crime counts (the majority are clustered around 10-20), thankfully and as one might expect.
 
+</br>
 
+---
 # Quantitative Analysis<a name="models">
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.
@@ -601,6 +614,7 @@ The negative binomial regression model does not make this *mean == variance* ass
 Like the Poisson distribution, the negative binomial distribution describes the probabilities of the occurrence of whole numbers greater than or equal to 0.
 However, the variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
 This makes negative binomial regression a good alternative to Poisson regression should the data be overdispersed.
+
 ```r
 library(AER)
 
@@ -635,6 +649,7 @@ print(summary(pop_dep_model <- glm(crime_count ~ income_score_rate +
                                    data=crime_subset_df)))
 print(dispersiontest(pop_dep_model))
 ```
+
 By controlling for important covariates, we can obtain more precise estimates of the relationship between scenic rating and number of crimes in a LSOA.
 We have specifically chosen to also include population density and indices of deprivation (relating to a range of factors including health, education, income, and housing) for a LSOA as other predictors, 
 as these are variables which one might intuitively assume would also be influencing the crime rate.
@@ -648,6 +663,7 @@ Above we run three Poisson regression models:
 Comparing these models should give an indication of how much information there is by including scenic ratings.
 However, the overdispersion tests suggests that the data has variation that is much higher than would be expected (the rule of thumb is that the ratio of deviance to df should be ~1).
 So below we run a negative binomial regression model which relaxes this *mean == variance* assumption of the Poisson distribution.
+
 ```r
 library(dplyr)
 library(MASS)
@@ -681,6 +697,7 @@ print(summary(pop_dep_model <- glm.nb(crime_count ~ income_score_rate +
 # check for collinearity
 print(vif(full_model))
 ```
+
 # Summary of results<a name="summary">
 
 The results of the negative binomial regression analysis suggests that the scenic rating of an LSOA exerts a statistically significant effect on the total crime count for that LSOA (p < 0.001),
@@ -727,6 +744,8 @@ For example, below we see that the `minor` crime of `burglary in a dwelling` is 
  >## #5 Exceptions to the Broken Window hypothesis - higher scenic ratings are associated with more (minor) burglaries in a dwelling
 
  This finding is also intuitive - more scenic or **fancier** places attract more burglaries - and suggests that there are exceptions to the Broken Window hypothesis!
+
+
 ```r
 library(AER)
 

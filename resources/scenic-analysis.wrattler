@@ -495,24 +495,25 @@ makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, funct
   });
 });
 ```
-Below, we use R to plot raw scatterplots of the predictor variables against the mean monthly number of crimes. 
-For more discrete predictor variables, such as employment score rate and income score rate, we show barcharts instead.
+Below, we use R to plot raw scatterplots of the predictor variables against the mean monthly number of crimes.
 
-* As initial support for the current hypothesis that less scenic areas may be associated with more crime, 
-we see that scenic rating generally decreases with higher mean monthly crime counts.
-* Furthermore, we see general trends of increasing levels of deprivation with higher mean monthly crime counts.
-* The boundaries of LSOAs were originally selected to be similar in population size whilst maintaining a representative coherent sample regarding social conditions.
-This explains why we mostly observe fairly similar population sizes regardless of mean monthly crime count,
-with perhaps a slight trend of increasing population size with higher mean monthly crime counts.
-* It's also noteable that there are few LSOAs which have high mean monthly crime counts (the majority are clustered around 10-20), thankfully and as one might expect.
+For more discrete predictor variables for which scatterplots are not appropriate, such as employment score rate and income score rate, we create bins of the LSOAs according to crime count and
+then plot the number of LSOAs for given values of the predictor variables. For example, this allows us to see the distributions of the variable for LSOAs with high crime versus low crime.
+The four colours in the below plots hence represent different ranges of percentiles of the data according to crime count
+(![#E89005](https://placehold.it/15/E89005/000000?text=+): 0-25th percentile of LSOAs (i.e. have the lowest number of total crimes),
+![#2292A4](https://placehold.it/15/2292A4/000000?text=+) : 25th-50th,
+![#485665](https://placehold.it/15/485665/000000?text=+) : 50th-75th,
+![#003B36](https://placehold.it/15/003B36/000000?text=+) : 75th-100th (i.e. have the highest number of total crimes)).
 ```r
 install.packages("reshape2")
 library(reshape2)
 library(ggplot2)
+library(mltools)
 
 long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_monthly_crime_count", "lsoa_name_2011", 
                                                 "n_months", "mean_monthly_crime_count", "crime_category"))
 
+# for continuous predictor variables...
 scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) +
                       geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count") + 
                       geom_smooth(method="lm", color="darkred")
@@ -537,14 +538,32 @@ health_plot <- ggplot(data = subset(long_data, variable=="health_deprivation_and
                       geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("health deprivation and disability score") + xlab("mean monthly crime count") +
                       geom_smooth(method="lm", color="darkred")
 
-employ_plot <- ggplot(data = subset(long_data, variable=="employment_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("employment score rate") + xlab("mean monthly crime count") +
-                      geom_smooth(method="lm", color="darkred")
+# for discrete predictor variables...
+binned_data = bin_data(crime_subset_df$mean_monthly_crime_count, bins=4, binType = "quantile")
+bin_labels <- as.integer(binned_data) - 1L
+crime_subset_df["label"] <- bin_labels
 
-income_plot <- ggplot(data = subset(long_data, variable=="income_score_rate"), aes(x=mean_monthly_crime_count, y=value)) +
-                      geom_point(alpha=4/20, color="darkorange") + xlim(0, 50) + ylab("income score rate") + xlab("mean monthly crime count") +
-                      geom_smooth(method="lm", color="darkred")
+employ_plot <- ggplot(crime_subset_df, aes_string("employment_score_rate")) +
+                    geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=0.05,  fill = "#E89005", alpha = 0.5) + # lowest crime count
+                    geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=0.05, fill = "#2292A4", alpha = 0.5) +
+                    geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=0.05, fill = "#485665", alpha = 0.5) +
+                    geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=0.05, fill = "#003B36", alpha = 0.5) # highest crime count
+
+income_plot <- ggplot(crime_subset_df, aes_string("income_score_rate")) +
+                    geom_histogram(data=subset(crime_subset_df, label == 0), binwidth=0.05,  fill = "#E89005", alpha = 0.5) + # lowest crime count
+                    geom_histogram(data=subset(crime_subset_df, label == 1), binwidth=0.05, fill = "#2292A4", alpha = 0.5) +
+                    geom_histogram(data=subset(crime_subset_df, label == 2), binwidth=0.05, fill = "#485665", alpha = 0.5) +
+                    geom_histogram(data=subset(crime_subset_df, label == 3), binwidth=0.05, fill = "#003B36", alpha = 0.5) # highest crime count
 ```
+* As initial support for the current hypothesis that less scenic areas may be associated with more crime, 
+we see that scenic rating generally decreases with higher mean monthly crime counts.
+* Furthermore, we see general trends of increasing levels of deprivation with higher mean monthly crime counts.
+* The boundaries of LSOAs were originally selected to be similar in population size whilst maintaining a representative coherent sample regarding social conditions.
+This explains why we mostly observe fairly similar population sizes regardless of mean monthly crime count,
+with perhaps a slight trend of increasing population size with higher mean monthly crime counts.
+* It's also noteable that there are few LSOAs which have high mean monthly crime counts (the majority are clustered around 10-20), thankfully and as one might expect.
+
+
 # Quantitative Analysis<a name="models">
 
 We now look to better quantify the relationship between the crime counts and the scenicness of the area.

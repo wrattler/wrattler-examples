@@ -8,7 +8,7 @@ dependencies:
   - flask-cors
   - requests
   - pycairo
-  - pyarrow
+#  - pyarrow
   - pip
   - pip:
       - wrattler-python-service==0.6

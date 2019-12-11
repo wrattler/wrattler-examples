@@ -1,0 +1,56 @@
+#!/bin/bash
+echo "HI FROM POSTBUILD!"
+
+# install R packages
+echo 'local({r <- getOption("repos")
+       r["CRAN"] <- "http://cran.r-project.org"
+       options(repos=r)
+})' > ~/.Rprofile
+
+# some magic to install the R curl package, which is a prerequisite for other R packages.
+wget https://cran.r-project.org/src/contrib/curl_4.2.tar.gz
+R CMD INSTALL --configure-vars='INCLUDE_DIR=/usr/include/x86_64-linux-gnu/curl LIB_DIR=/usr/lib/x86_64-linux-gnu/curl' curl_4.2.tar.gz
+
+Rscript -e "install.packages('httr')"
+Rscript -e "install.packages('devtools')"
+Rscript -e "install.packages('webutils')"
+Rscript -e "install.packages('base64enc')"
+# 'jug', our HTTP server, is now archived - install from source
+Rscript -e "install.packages('https://cran.r-project.org/src/contrib/Archive/infuser/infuser_0.2.8.tar.gz')"
+Rscript -e "install.packages('https://cran.r-project.org/src/contrib/Archive/jug/jug_0.1.7.tar.gz')"
+Rscript -e "install.packages('arrow')"  # doesn't fully work, but we need this to prevent errors from `library(arrow)`
+Rscript -e "install.packages('AER')"
+Rscript -e "install.packages('mltools')"
+Rscript -e "install.packages('reshape2')"
+Rscript -e "install.packages('car')"
+Rscript -e "install.packages('dplyr')"
+
+
+# clone the master branch of wrattler
+git clone --single-branch --branch master https://github.com/wrattler/wrattler.git
+#git clone --single-branch --branch develop https://github.com/wrattler/wrattler.git
+# build the client (wrattler-app.js) - need to install yarn first
+rm -fr $HOME/.yarn
+cd ./wrattler/client
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --import
+curl -o- -L https://yarnpkg.com/install.sh | bash
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+npm install webpack
+yarn; yarn build;
+# copy wrattler-app.js to where it will be served from
+cp build/wrattler-app.js public
+
+# install the http server
+npm install http-server -g
+
+# build the jupyterlab extension
+cd ../jupyterlab_wrattler/
+#jlpm run build
+jupyter labextension install .
+
+# use the local setup.py package to define entrypoints for jupyter server proxy.
+cd ../../binder
+pip install .
+cd ..
+# link resources directory so that .py or .R resources can be served by the client
+ln -s `pwd`/resources wrattler/client/public/

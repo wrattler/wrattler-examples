@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "HI FROM POSTBUILD!"
 
 # install R packages
 echo 'local({r <- getOption("repos")
@@ -8,8 +7,10 @@ echo 'local({r <- getOption("repos")
 })' > ~/.Rprofile
 
 # some magic to install the R curl package, which is a prerequisite for other R packages.
-wget https://cran.r-project.org/src/contrib/curl_4.2.tar.gz
-R CMD INSTALL --configure-vars='INCLUDE_DIR=/usr/include/x86_64-linux-gnu/curl LIB_DIR=/usr/lib/x86_64-linux-gnu/curl' curl_4.2.tar.gz
+## NOTE this looks like it will break when a new curl version is released - link to old version
+## was removed from 4.2->4.3.
+wget https://cran.r-project.org/src/contrib/curl_4.3.tar.gz
+R CMD INSTALL --configure-vars='INCLUDE_DIR=/usr/include/x86_64-linux-gnu/curl LIB_DIR=/usr/lib/x86_64-linux-gnu/curl' curl_4.3.tar.gz
 
 Rscript -e "install.packages('httr')"
 Rscript -e "install.packages('devtools')"

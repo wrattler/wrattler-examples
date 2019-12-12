@@ -1,6 +1,5 @@
-FROM wrattler/wrattler_python_service:v0.5
+FROM wrattler/wrattler_python_service:v0.10
 
-ADD . /app
 WORKDIR /app
 
 ENV FLASK_APP app.py

@@ -1,0 +1,704 @@
+# Testing the Broken Window hypothesis: are less scenic neighbourhoods linked to more crime?
+<br />
+The Broken Window hypothesis proposes that visible signs of crime and civil disorder creates an environment that encourages further crime and disorder.
+The hypothesis has been reponsible for promoting controversial policing policies throughout the 1990s.
+Perhaps the most notable application of the theory was the adoption of the *stop-and-frisk* practise in New York City.
+Whilst application of such policies have been linked to decline in crime rates, great skeptism surrounds the validity of such a relationship
+because of other changes taking place at that time, including the number of police officers, periods of economic growth and a reduction in poverty.
+
+We wish to study the relationship between crime rates and scenicness in areas across London, as well as accounting for other indices of deprivation.
+In this notebook we,
+* [Load and format the datasets](#datasets)
+* [Visually explore the data](#visualisation) using javascript for an interactive visualisation and R to produce scatterplots
+* [Build models](#models) to begin quantitatively exploring the relationship between scenic rating, crime and indices of deprivation
+* [Outlines further analyses to explore](#future) - this analysis is still a work in progress!
+
+
+## Datasets<a name="datasets">
+
+We use the following data for the analysis:
+1. [Crime data](#crime) - counts of different types of crime in an area
+1. [Indices of deprivation and population density data](#indices) - indicators of deprivation relating to health, employment, housing, income rate, living environment,and education
+1. [Scenic ratings across London](#scenic) - measures of scenicness of an area given by a neural network
+
+### Crime data<a name="crime">
+
+The first dataset we import is the [MPS LSOA Level Crime (historic)](https://data.london.gov.uk/dataset/recorded_crime_summary) dataset.
+This contains counts of the number of crimes at different Lower Super Output Area (LSOA) geographic locations in London per month, according to crime type.
+LSOAs are geographic areas with an average population size of 1,600, defined by the Office of National Statistics for statistical analyses,
+with areas ranging between 0.018 square km to 684 square km.
+
+
+
+
+
+```python
+%global constants.py
+%global utils.py
+import pandas as pd
+
+counts_per_LSOA = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/crime_data_counts_per_LSOA_25_11_19.csv", index_col=0)
+```
+
+
+### Indices of deprivation & population density data <a name="indices">
+
+To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls).
+In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
+
+
+```python
+depriv_indices = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/ID%202015%20for%20London%20exported.csv")
+
+# make sure to remove all indices 'directly' relating to crime, and columns containing rank or decile extra info
+drop_cols = [c for s in ["crime", "rank", "decile", "authority"] for c in depriv_indices.columns if s in c.lower()]
+depriv_indices.drop(columns=drop_cols, inplace=True)
+
+depriv_indices.rename(columns=lambda name: rename_category_for_flattening(name), inplace=True) # tidy column names
+depriv_indices.rename(columns={"lsoa_code_2011": JOINING_KEY}, inplace=True)
+
+if depriv_indices.isnull().values.any():
+    print("Nan values found in dataframe")
+    depriv_indices.dropna(inplace=True)
+```
+```python
+population_density = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/lsoa-data.csv", encoding="latin")
+
+population_density.rename(columns={"Lower Super Output Area": JOINING_KEY, "Population Density;Area (Hectares);": "population_density_area_hectares"}, inplace=True)
+population_density = population_density[["lsoa_code", "population_density_area_hectares"]]
+
+if population_density.isnull().values.any():
+    print("Nan values found\n")
+    population_density.dropna(inplace=True)
+```
+
+
+### Scenic ratings<a name="scenic">
+
+Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images.
+The method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
+
+```python
+predictions = pd.read_csv("https://wrattlerdemo.blob.core.windows.net/data/Scenic_predictions_google_images.csv", index_col=0)
+
+predictions = predictions[predictions["year"] == 2015].drop(columns="year")
+predictions.rename(columns={"LSOA_code": JOINING_KEY, "Predicted_Score":"scenic_rating"}, inplace=True)
+
+if predictions.isnull().values.any():
+    print("Nan values found\n")
+    predictions.dropna(inplace=True)
+```
+```python
+# join the datasets
+df = pd.concat([depriv_indices.set_index(JOINING_KEY),
+                population_density.set_index(JOINING_KEY),
+                predictions.set_index(JOINING_KEY)], axis=1, sort=True)
+
+df = df.join(counts_per_LSOA.set_index(JOINING_KEY)).dropna().reset_index().rename(columns={"index":JOINING_KEY})
+
+# first analysis crime counts irrespective of crime type
+crime_subset_df = df[df["crime_category"] == "total_count"]
+```
+
+# Visualisations<a name="visualisation">
+
+Having loaded the data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/)
+to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as inspect the measures of deprivation
+across different LSOA codes.
+
+To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing
+ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
+
+```javascript
+//global loader.js
+
+// load in js libraries leaflet, d3, jquery and a google stylesheet
+loadStyle("https://fonts.googleapis.com/css?family=Lora:400,700italic")
+loadStyle("https://unpkg.com/leaflet@0.7.2/dist/leaflet.css")
+loadScript("https://unpkg.com/leaflet@0.7.2/dist/leaflet.js")
+loadScript("https://d3js.org/d3.v3.min.js")
+loadScript("https://code.jquery.com/jquery-3.4.1.min.js")
+```
+```javascript
+loadInlineStyle(`
+.scenic .info {
+    padding: 6px 8px;
+    font-size: 20px;
+    font-family: 'Lora', serif;
+    background: rgba(255,255,255,0.6);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width:200px;
+}
+.scenic .info h4 {
+    margin: 0 0 5px;
+    color: #777;
+    font-family: 'Lora', serif;
+    font-style:  italic;
+    font-weight: 700;
+}
+.scenic .legend {
+    text-align: center;
+    line-height: 32px;
+    color: #777;
+    height: 102px;
+}
+.scenic .legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+.scenic .band {
+    float: left;
+    height: 5px;
+    background-color: #c9c9c9;
+}
+.scenic .leaflet-control-layers-base label {
+    margin-bottom: .2rem;
+    font-family: 'Lora', serif;
+    font-size: 14px;
+}
+.scenic  {
+    font-size: 16px;
+    font-family: 'Lora', serif;
+}
+.scenic b {
+    font-family: 'Lora' !important;
+    font-style:  italic;
+    font-weight: 700;
+}
+.scenic h1 {
+    margin: 0 0 5px;
+    color: #000000;
+    font-family: 'Lora', serif;
+    font-style:  italic;
+    font-weight: 700;
+    font-size: 20px;
+}
+.scenic h3 {
+    font-family: 'Lora' !important;
+    font-style:  italic;
+    font-weight: 700;
+    color: #3a5a7d;
+    text-decoration: underline;
+    font-size: 16px;
+}
+.scenic a:link {
+    color: #3a5a7d;
+    font-style:  italic;
+}
+.scenic a:visited {
+    color: #3a5a7d;
+}
+.scenic a:hover {
+    color: #3a5a7d;
+    background-color: #d7d7d7;
+}
+.scenic a:active {
+    color: #3a5a7d;
+    background-color: #d7d7d7;
+}
+.scenic svg {
+    position: relative;
+}
+#wrapper, #map {
+    height: 100%;
+}
+#wrapper {
+    margin-left: 260px;
+}
+#map {
+    float: left;
+    width: 100%;
+}
+#sidebar {
+    float: left;
+    width: 260px;
+    margin-left: -260px;
+}
+`)
+```
+```javascript
+//local map-helpers.js
+//local fullscreen.js
+makeFullScreen({title:"Crime/Scenicness Across London LSOAs", height:700}, function (id) {
+  if (document.getElementById(id).innerHTML.length > 0) return;
+  document.getElementById(id).innerHTML = "<div class='scenic' style='height:calc(100% - 40px);max-width:calc(100% - 40px);margin:20px' id='" + id + "-map'></div>";
+
+  /**
+   * Load the csv data containing scenic ratings for particular points across london.
+   * These values are the average rating of ~four viewpoints across 360 degrees per point.
+   * The data is converted to geojson so we can easily extract the coordinates of points,
+   * and the library d3 is used to help display the (~130000) points
+   * */
+
+  var now_showing=0;
+  d3.csv('https://wrattlerdemo.blob.core.windows.net/data/mean_scenic_rating_per_locid_30_10_19.csv', function (error, scenic) {
+    var geoData = {type: "FeatureCollection", features: reformat(scenic)};
+    var leafletMap = L.map(id + "-map").setView([51.505, -.09], 13);
+    var base = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+    });
+    leafletMap.addLayer(base);
+
+    var svg = d3.select(leafletMap.getPanes().overlayPane).append("svg"); // svg appends d3 layer for rendering svg to map
+    var g = svg.append("g").attr("class", "leaflet-zoom-hide"); // g keeps SVGs grouped together
+
+    function projectPoint(x, y) {
+        var point = leafletMap.latLngToLayerPoint(new L.LatLng(y, x));
+        this.stream.point(point.x, point.y);
+    }
+
+    /**
+     * Path and transform take regular coords and turn them into svg coords, and
+     * those coords are applied back to the leaflet map layer using the current stream (above)
+     * */
+
+    var transform = d3.geo.transform({point: projectPoint});
+    var path = d3.geo.path().projection(transform);
+
+    function redrawSubset(subset) {
+      path.pointRadius(2);
+      var bounds = path.bounds({
+        type: "FeatureCollection",
+        features: subset
+      });
+      var topLeft = bounds[0];
+      var bottomRight = bounds[1];
+
+      svg.attr("width", bottomRight[0] - topLeft[0])
+         .attr("height", bottomRight[1] - topLeft[1])
+         .style("left", topLeft[0] + "px")
+         .style("top", topLeft[1] + "px");
+
+      g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+      var points = g.selectAll("path")
+                    .data(subset, function(d) {
+                      return d.geometry.coordinates;
+                    })
+                    .enter()
+                    .append("path")
+                    .attr("d", path).attr("class", "point")
+                    .style("fill", function(d) {return percToColour(d.properties.scenic_rating, 1.5, 6.3)})
+                    .style("fillOpacity", .8);
+    }
+
+    function mapmove(e) {
+      d3.selectAll(".point").remove();
+      redrawSubset(geoData.features);
+    }
+
+    /* *
+     * Next load data containing values for multiple variables per LSOA, so this info can be
+     * displayed as we rollover and click on an LSOA. These layers have far fewer points
+     * (1 per LSOA), and so are implemented purely in leaflet
+     * */
+
+    function highlightFeature(e) {
+      var layer = e.target;
+      layer.setStyle({
+        weight: 1,
+        opacity: 1,
+        color: '#acadc1',
+        dashArray: '',
+        fillOpacity: .2
+      });
+      if (!L.Browser.ie && !L.Browser.opera) {
+        layer.bringToFront();
+      }
+      info.update(layer.feature.properties);
+    }
+
+    var lsoaBoundaries;
+    function resetHighlight(e) {
+      lsoaBoundaries.resetStyle(e.target);
+      info.update();
+    }
+
+    function displayInfo(e) {
+      var layer = e.target;
+      now_showing=layer.feature.properties;
+      info.update(layer.feature.properties);
+    }
+
+    function onEachFeature(feature, layer) {
+      layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: displayInfo
+      });
+    }
+
+    $.getJSON("https://wrattlerdemo.blob.core.windows.net/data/lsoa_boundary_and_crime_data_11_11_19.geojson", function(json) {
+      lsoaBoundaries = L.geoJson(json, { // boundary data as well as income, health data etc. info to display
+        style: function (feature) {
+          return {
+            fillColor: '#acadc1',
+            weight: 1,
+            opacity: 0,
+            color: 'white',
+            fillOpacity: 0
+          };
+        },
+        onEachFeature: onEachFeature
+      }).addTo(leafletMap);
+
+      var sceneryLayer = L.geoJson(json, { // scenery layer displaying mean scenic ratings per LSOA
+        style: function (feature) {
+          return {
+            fillColor: percToColour(feature.properties.scenic_rating, 2.16, 4.84),
+            weight: 1,
+            opacity: 0,
+            color: 'white',
+            dashArray: '1',
+            fillOpacity: .6
+          };
+        }
+      });
+
+      var crimeLayer = L.geoJson(json, { // crime layer displaying mean monthly crime counts per LSOA
+        style: function (feature) {
+          return {
+            fillColor: getCrimeColour(feature.properties.mean_monthly_crime_count),
+            weight: 1,
+            opacity: 0,
+            color: 'white',
+            dashArray: '1',
+            fillOpacity: .4
+          };
+        }
+      });
+
+      var d3Layer = L.Class.extend({ // extend leaflet class to toggle on/off d3 layer w/ other leaflet layers
+        initialize: function() {
+          return;
+        },
+        onAdd: function() {
+          leafletMap.on('viewreset', mapmove); // remove points and redraw relevant subset as we move around map
+          redrawSubset(geoData.features); // draw initial susbet in starting position
+          scenicPointsLegend.addTo(leafletMap);
+        },
+        onRemove: function() {
+          leafletMap.off('viewreset', mapmove);
+          d3.selectAll(".point").remove();
+          leafletMap.removeControl(scenicPointsLegend);
+        },
+      });
+
+      // switch between scenic rating per points vs mean per LSOA vs crime counts
+      var baseMaps = {
+        "Average Scenic Ratings per LSOA": sceneryLayer,
+        "Average Crime Count per Month": crimeLayer,
+        "Scenic Points": new d3Layer()
+      };
+      L.control.layers(baseMaps, null, {position: 'bottomright', collapsed: false}).addTo(leafletMap);
+      leafletMap.attributionControl.addAttribution('Scenic Data &copy; <a href="http://scenicornot.datasciencelab.co.uk/">Scenic-Or-Not</a>');
+    });
+
+    /* *
+     * Then, add and scale info bars (scenic rating and indices of health, income and employment deprivation)
+     * to show when particular LSOA is clicked on. Each variable has been scaled between 1 and 10.
+     * */
+
+    // custom info control
+    var info = L.control();
+    info.onAdd = function (map) {
+      this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+      this.update();
+      return this._div;
+    };
+
+    // method to update the control based on feature properties passed
+    info.update = function (props) {
+      var rollover_html=``;
+      if ((!props)&&(!now_showing)) {
+        rollover_html=`<h4>Click on any LSOA <br />to see region data</h4>`;
+      } else if ((props)&&(!now_showing)) {
+        rollover_html+=`<h4>Show data for `+props.lsoa11cd+` (`+props.lsoa11nm+`)</h4>`;
+      } else {
+        var showingCode = now_showing.lsoa11cd;
+        var showingName = now_showing.lsoa11nm;
+        var scenicness = getScenicBar(now_showing.scenic_rating);
+        var health = getHealthBar(now_showing.deprivation_health_deprivation_and_disability_score);
+        var income = getIncomeBar(now_showing.deprivation_income_score_rate);
+        var employ = getEmploymentBar(now_showing.deprivation_employment_score_rate);
+        var education = getEducationBar(now_showing.deprivation_education_skills_and_training_score);
+        var livingEnv = getLivingEnvBar(now_showing.deprivation_living_environment_score);
+        var crime = getCrimeColour(now_showing.mean_monthly_crime_count, true);
+        rollover_html+=`<b>LSOA: ${showingCode} (${showingName})</b>
+          <br/>Scenicness<br/><div class="band" style="width:${160-scenicness*10*1.6}px; border-left:${scenicness*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Health<br/><div class="band" style="width:${160-health*10*1.6}px; border-left:${health*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Income<br/><div class="band" style="width:${160-income*10*1.6}px; border-left:${income*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Employment<br/><div class="band" style="width:${160-employ*10*1.6}px; border-left:${employ*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Education<br/><div class="band" style="width:${160-education*10*1.6}px; border-left:${education*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Living Env.<br/><div class="band" style="width:${160-livingEnv*10*1.6}px; border-left:${livingEnv*10*1.6}px solid #a42e3d">&nbsp;</div>
+          Crime<br/><div class="band" style="width:${160-crime*10*1.6}px; border-left:${crime*10*1.6}px solid #a42e3d">&nbsp;</div>`;
+        if (props) { // currently hovering over
+          rollover_html+=`<br/><h4>Show data for `+props.lsoa11cd+` (`+props.lsoa11nm+`) next?</h4>`;
+        }
+      }
+      this._div.innerHTML =  rollover_html;
+    };
+    info.addTo(leafletMap);
+
+    var continuousScaleLegend = L.Control.extend({
+      initialize: function(min, max) {
+        /* *
+         * @param {Number} min Min value in data (low end of colour scale)
+         * @param {Number} max Max value in data (high end of colour scale)
+         * */
+        this._min = min;
+        this._max = max;
+        return;
+      },
+      options: {position: 'bottomleft'},
+      onAdd: function(map) {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML = `Scenicness Rating<br>Min (${this._min}) &emsp;&nbsp; Max (${this._max})`;
+        var legend_svg = d3.select(div).append("svg");
+        var defs = legend_svg.append("defs");
+        var linearGradient = defs.append("linearGradient").attr("id", "linear-gradient");
+        linearGradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", percToColour(this._min, this._min, this._max));
+        linearGradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", percToColour(this._max, this._min, this._max));
+        legend_svg.append("rect")
+          .attr("width", 200)
+          .attr("height", 35)
+          .style("fill", "url(#linear-gradient)")
+          .style("opacity", 0.8);
+        return div;
+      },
+    });
+    var scenicPointsLegend = new continuousScaleLegend(1.5, 6.3);
+    var scenicLsoaLegend = new continuousScaleLegend(2.1, 4.8);
+
+    var crimeLegend = L.control({position: 'bottomleft'});
+    crimeLegend.onAdd = function (map) {
+      var div = L.DomUtil.create('div', 'info legend');
+      var grades = [55,25,15,7,2];
+      var label_text = ["> 50","20 - 50","10 - 20","5 - 10","< 5"];
+      var labels = ['Av. Monthly Crimes'];
+      for (var i=0; i<grades.length; i++) {
+        labels.push(
+        '<i style="background:' + getCrimeColour(grades[i]) + '"></i> ' + label_text[i]);
+      }
+      div.innerHTML = labels.join('<br>');
+      div.style = "height: 200px; width: 135px; line-height: 29px;";
+      return div;
+    };
+
+    // display appropriate legend as baselayer changes
+    leafletMap.on("baselayerchange", function (event) {
+      lsoaBoundaries.bringToFront(); // keep lsoa boundary info (health, income scores etc.) at the front
+      if (event.name === "Average Crime Count per Month") {
+        if (scenicLsoaLegend._map) {
+          leafletMap.removeControl(scenicLsoaLegend);
+        }
+        crimeLegend.addTo(leafletMap);
+      } else {
+        if (crimeLegend._map) {
+          leafletMap.removeControl(crimeLegend);
+        }
+        if (event.name === "Average Scenic Ratings per LSOA") {
+          scenicLsoaLegend.addTo(leafletMap);
+        } else { // layer change to scenic points
+          if (scenicLsoaLegend._map) {
+            leafletMap.removeControl(scenicLsoaLegend);
+          }
+        }
+      }
+    });
+  });
+});
+```
+
+Below, we use R to plot raw scatterplots of some of the variables against the mean monthly number of crimes.
+
+```r
+install.packages("reshape2")
+library(reshape2)
+library(ggplot2)
+
+long_data <- melt(crime_subset_df, id.vars = c("lsoa_code", "crime_count", "std_monthly_crime_count", "lsoa_name_2011",
+                                                "n_months", "mean_monthly_crime_count", "crime_category"))
+
+scenic_plot <- ggplot(data = subset(long_data, variable=="scenic_rating"), aes(x=mean_monthly_crime_count, y=value)) +
+                      geom_point(size=0.8) + xlim(0, 50) + ylab("scenic rating") + xlab("mean monthly crime count")
+
+pop_plot <- ggplot(data = subset(long_data, variable=="population_density_area_hectares"), aes(x=mean_monthly_crime_count, y=value)) +
+                   geom_point(size=0.8) + xlim(0, 50) + ylab("population density") + xlab("mean monthly crime count")
+
+living_e_plot <- ggplot(data = subset(long_data, variable=="living_environment_score"), aes(x=mean_monthly_crime_count, y=value)) +
+                        geom_point(size=0.8) + xlim(0, 50) + ylab("living environment score") + xlab("mean monthly crime count")
+
+housing_plot <- ggplot(data = subset(long_data, variable=="barriers_to_housing_and_services_score"), aes(x=mean_monthly_crime_count, y=value)) +
+                       geom_point(size=0.8) + xlim(0, 50) + ylab("barriers to housing and services score") + xlab("mean monthly crime count")
+```
+
+
+# Quantitative Analysis<a name="models">
+
+We now look to better quantify the relationship between the crime counts and the scenicness of the area.
+Count based data contains events that occur at a certain rate, and this rate may change over time.
+As we've seen in the plots above, it tends to have the following characteristics:
+* consists of *non negative integers*
+* *skewed distribution* - may contain a large number of data points for just a few values
+* *sparsity* - may reflect the occurrence of a rare event
+* *rate of occurrence* - assumption that there is a certain rate of occurrences of events that drives the
+generation of such data and this may drift overtime.
+
+We can investigate a couple of approaches for analysing this kind of data.
+
+### Poisson regression model
+
+The [Poisson distribution](https://towardsdatascience.com/the-poisson-distribution-and-poisson-process-explained-4e2cb17d459)
+models the probability of event(s) occurring within a specific timeframe,
+assuming that occurrences are not affected by the timing of previous events.
+Since Possion distributed data is intrinsically integer-valued,
+[Poisson regression models](https://www.dataquest.io/blog/tutorial-poisson-regression-in-r/) - which assume event counts to be Poisson distributed - are commonly used to model count data.
+
+If the event rate can change from one observation to the next,
+we assume that the rate is influenced by explanatory or predictor variables.
+The Poisson regression model fits the observed counts to the explanatory variables matrix via a *link-function*,
+which expresses the rate vector as a function of regression coefficients and the explanatory variables matrix.
+It uses the exponential-link (or [log-link](https://www.theanalysisfactor.com/count-models-understanding-the-log-link-function/)) function,
+which keeps the predicted values non negative when the explanatory variables or regression coefficients have negative values.
+
+### Overdispersion
+
+The mean and variance of the Poisson distribution are assumed to be the same, and equal to the event rate (see [proof](https://llc.stat.purdue.edu/2014/41600/notes/prob1804.pdf)).
+However, in practise, this is often violated by real world data and the
+observed variance is usually larger than its mean - this is referred to as [*overdispersion*](https://data.princeton.edu/wws509/r/overdispersion).
+Performing Poisson regression on count data that exhibits this will result in a model that doesn’t fit well.
+
+### Negative Binomial regression model
+
+The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/)
+does not make this *mean == variance* assumption about the data.
+The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion,
+and so is a good alternative model to Poisson regression model should the data be overdispersed.
+
+```r
+library(AER)
+
+# Add population density data & deprivation scores
+print(summary(m1 <- glm(crime_count ~ scenic_rating +
+                                      income_score_rate +
+                                      employment_score_rate +
+                                      education_skills_and_training_score +
+                                      health_deprivation_and_disability_score +
+                                      barriers_to_housing_and_services_score +
+                                      living_environment_score +
+                                      population_density_area_hectares,
+                        family="poisson",
+                        data=crime_subset_df)))
+print(dispersiontest(m1))
+
+# Run Poisson model without scenic rating
+print(summary(m2 <- glm(crime_count ~ income_score_rate +
+                                      employment_score_rate +
+                                      education_skills_and_training_score +
+                                      health_deprivation_and_disability_score +
+                                      barriers_to_housing_and_services_score +
+                                      living_environment_score +
+                                      population_density_area_hectares,
+                        family="poisson",
+                        data=crime_subset_df)))
+print(dispersiontest(m2))
+```
+
+By controlling for important covariates, we can obtain more precise estimates of the relationship between scenic rating and number of crimes in an LSOA.
+Above we run three Poisson regression models:
+* full(er) model containing scenic rating and the other predictor variables
+* reduced model excluding scenic rating as a predictor variable
+
+Comparing these models should give an indication of how much information there is by including the scenic ratings.
+However, the overdispersion tests suggests that the data has variation that is much higher than would be expected (the rule of thumb is that the ratio of deviance to df should be ~1).
+So below we run a negative binomial regression model which relaxes this *mean == variance* assumption of the Poisson distribution.
+
+```r
+library(dplyr)
+library(MASS)
+
+
+print(summary(mnb1 <- glm.nb(crime_count ~ scenic_rating,
+                             data=crime_subset_df)))
+
+print(summary(mnb2 <- glm.nb(crime_count ~ scenic_rating +
+                                           income_score_rate +
+                                           employment_score_rate +
+                                           education_skills_and_training_score +
+                                           health_deprivation_and_disability_score +
+                                           barriers_to_housing_and_services_score +
+                                           living_environment_score +
+                                           population_density_area_hectares,
+                             data=crime_subset_df)))
+
+print(summary(mnb3 <- glm.nb(crime_count ~ income_score_rate +
+                                           employment_score_rate +
+                                           education_skills_and_training_score +
+                                           health_deprivation_and_disability_score +
+                                           barriers_to_housing_and_services_score +
+                                           living_environment_score +
+                                           population_density_area_hectares,
+                             data=crime_subset_df)))
+
+# drop in deviance test https://bookdown.org/roback/bookdown-bysh/ch-poissonreg.html
+print(anova(mnb2, mnb3, test = "Chisq"))
+
+# find variables whose p values dropped
+p_values_with_SR <- data.frame(summary(mnb2)$coefficients)[4] # get p values from model with scenic rating
+p_values_with_SR$variable <- rownames(p_values_with_SR)
+p_values_with_SR <- setNames(p_values_with_SR, c("p-value with", "variable"))
+
+p_values_without_SR <- data.frame(summary(mnb3)$coefficients)[4] # get p values from model without scenic rating
+p_values_without_SR$variable <- rownames(p_values_without_SR)
+p_values_without_SR <- setNames(p_values_without_SR, c("p-value without", "variable"))
+
+p_values <- left_join(p_values_with_SR, p_values_without_SR, by="variable")
+changed_variables <- filter(p_values, `p-value with`/`p-value without` > 10 & `p-value without` <= 0.05)
+```
+
+
+The results of the negative binomial regression analysis suggest that the scenic rating of an LSOA exerts a statistically significant effect on the total crime count for that LSOA (p < 0.001),
+and it may not be surpising that lower scenic ratings are linked to higher crime rates.
+By comparing `mnb1` and `mnb2`, we also note that there is evidence to suggest that the significant effect of scenic rating remains after controlling for the other predictor variables.
+However, we want to try and better clarify the importance of scenic rating as a predictor variable.
+
+By giving a measure of how well the model fits the data and avoids overfitting, Akaike Information Criterion (AIC) is a common index used to compare models.
+
+- Indicating a better fit to the data, the model with scenic rating information included `mnb2`, has a lower AIC score than the model without scenic rating information, `mnb3`.
+ This gives an initial indication that including the scenic rating does provide valuable information to the model.
+
+To examine more subtle changes between the full and reduced models, we can also look at the p-values of coefficients that represent the significance of each variable in the model.
+Above we also identified variables whose p-values dropped by at least 10-fold to see which became more important when scenic ratings were not included.
+
+- For both models, we immediately see that neither `income_score_rate` nor `employment_score_rate` exert a statistically significant influence on the number of crime occurences in either model.
+ This combination of variables may not be surprising as one can imagine that income and employment scores may be related.
+
+- The variables `health_deprivation_and_disability_score`, `barriers_to_housing_and_services_score` and `population_density_area_hectares` gained more significance in the reduced model,
+ their coefficients suggesting that higher scores of such indices and population density are linked to higher crime rates.
+
+- The variable `education_skills_and_training_score` also gains more significance in the reduced model. However, its coefficient suggests that its direction of influence changes: in the model
+ with scenic rating information present, lower deprivation of education scores are linked with higher crime rates, but higher scores are linked with higher crime rates in the reduced model.
+
+# To explore further<a name="future">
+
+So far the analysis supports the influence of scenic rating on crime rates in LSOAs across London.
+However, the analysis is still a work in progress and still needs to further explore the relationship with respect to the other indices of deprivation in particular.
+
+ - The changes in regression coefficients of the variable `education_skills_and_training_score`
+ suggesting the reverse relationship, is potentially suprising and requires more investigation - [Simpson's Paradox?](https://towardsdatascience.com/solving-simpsons-paradox-e85433c68d03)
+ - Can we identify explanations for why those other three variables change significance when scenic rating is removed.
+ - Following those above to points, **collinearity**: one of the main challenges of this analysis is the probable interrelation/correlation of many of the predictor variables,
+ which makes it more difficult to extract individual effects of each variable - we have not yet performed directs test of collinearity.
+ - Investigate **individual types of crime**: we currently have crime data relating to major and minor crime types; the analysis so far has only looked at crime rate irrespective of the type.
+

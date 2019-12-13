@@ -15,8 +15,10 @@ import webbrowser
 
 if os.name == "posix":
    TMPDIR = "/tmp"
+   LAUNCH_CMD = "docker-compose up >& {} &"
 else:
    TMPDIR = "%TMP%"
+   LAUNCH_CMD = "start /B docker-compose up > {} 2>&1"
 
 
 LOGFILE = os.path.join(TMPDIR,"docker.log")
@@ -29,7 +31,7 @@ if __name__ == "__main__":
    print("Building docker images")
    os.system("docker-compose build")
    print("Launching docker containers")
-   os.system("docker-compose up >& {} &".format(LOGFILE))
+   os.system(LAUNCH_CMD.format(LOGFILE))
    for i in range(TIMEOUT):
       ## parse the log to see if we have a URL for Jupyterlab
       token = None

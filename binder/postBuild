@@ -25,7 +25,8 @@ Rscript -e "install.packages('mltools')"
 Rscript -e "install.packages('reshape2')"
 Rscript -e "install.packages('car')"
 Rscript -e "install.packages('dplyr')"
-
+# datadiff
+Rscript -e "devtools::install_github('https://github.com/alan-turing-institute/datadiff')"
 
 # clone the master branch of wrattler
 git clone --single-branch --branch master https://github.com/wrattler/wrattler.git

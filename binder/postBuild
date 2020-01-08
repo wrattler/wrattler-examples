@@ -29,7 +29,7 @@ Rscript -e "install.packages('dplyr')"
 Rscript -e "devtools::install_github('https://github.com/alan-turing-institute/datadiff')"
 
 # clone the master branch of wrattler
-git clone --single-branch --branch master https://github.com/wrattler/wrattler.git
+git clone --single-branch --branch data-wrangling-tutorial https://github.com/wrattler/wrattler.git
 #git clone --single-branch --branch develop https://github.com/wrattler/wrattler.git
 # build the client (wrattler-app.js) - need to install yarn first
 rm -fr $HOME/.yarn

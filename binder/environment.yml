@@ -14,4 +14,5 @@ dependencies:
       - wrattler-python-service==0.6
       - wrattler-data-store==0.5.1
       - clevercsv
+      - seaborn
   - R

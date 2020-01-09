@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_r_service:v0.10
+FROM wrattler/wrattler_r_service:v0.10.1
 
 EXPOSE 7103
 

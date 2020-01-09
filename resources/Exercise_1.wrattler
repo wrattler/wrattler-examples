@@ -1,0 +1,90 @@
+## Exercise 1: IMDB data
+
+### Challenge: read the file "resources/imdb.csv" into a DataFrame, and use it to answer the following question:  
+
+### Which are better: Action movies or Romance movies?
+
+*Complication:*  This csv file (which came from Kaggle) has a slightly non-standard format - if there is a comma in a text field, it is escaped with a "\\" character.
+
+*Possible solution:* Use the *clevercsv* package to "sniff" the csv dialect and read the file.  Syntax is exactly the same as for the standard python *csv* package.
+
+
+
+
+
+
+
+
+```python
+if not os.path.exists("resources/imdb.csv"):
+    print("File not found")
+else:
+    print(len(open("resources/imdb.csv").readlines()))
+```
+
+
+
+
+
+
+
+
+OK, let's start by loading this CSV into Pandas...
+
+
+
+
+
+
+
+
+```python
+import pandas as pd 
+df = pd.DataFrame({"x":[1,2,3]})
+```
+
+
+
+
+
+
+
+
+Hmmm... OK, let's try using the python csv library to detect the dialect
+
+
+
+
+
+
+
+
+```python
+x=4
+```
+
+
+
+
+
+
+
+OK, that did something, but we only have 13928 rows, not 14762.  
+
+Lets try again using the *clevercsv* tool.
+
+
+
+
+
+
+
+```python
+import clevercsv 
+with open("resources/imdb100.csv") as csvfile:
+    dialect2 = clevercsv.Sniffer().sniff(csvfile.read())
+    csvfile.seek(0)
+    reader2 = clevercsv.reader(csvfile, dialect2)
+    newrows = list(reader2)
+    print(len(newrows))
+```

@@ -11,7 +11,7 @@ dependencies:
   - pyarrow
   - pip
   - pip:
-      - wrattler-python-service==0.6
+      - wrattler-python-service==0.7
       - wrattler-data-store==0.5.1
       - clevercsv
       - seaborn

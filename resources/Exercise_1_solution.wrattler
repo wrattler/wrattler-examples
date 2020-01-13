@@ -3,16 +3,22 @@ Using the file "resources/imdb.csv" (from Kaggle), figure out whether Action mov
 First, let's check that the file exists, and how many rows there are in it:
 
 
+
+
 ```python
 import os
 if not os.path.exists("resources/imdb.csv"):
-    print("Oh no!")
+    print("Doesn't exist!")
 else:
     print(len(open("resources/imdb.csv").readlines()))
 ```
 
 
+
+
 OK, so let's just read it straight into a pandas dataframe:
+
+
 
 
 ```python
@@ -21,9 +27,13 @@ df = pd.read_csv("resources/imdb.csv")
 ```
 
 
+
+
 Ok, so that didn't work...   In fact the problem is that the file uses an escape character "\" before every comma in string fields.  
 Even the standard python csv module's "Sniffer" doesn't manage to detect this.
 Luckily though, we have the "clevercsv" tool developed at the Alan Turing Institute, which we can use in exactly the same way as the standard csv module:
+
+
 
 
 ```python
@@ -38,19 +48,29 @@ with open("resources/imdb.csv") as csvfile:
     df = pd.DataFrame(rows[1:],columns=rows[0])
 ```
 
+OK, we have read all 3999 rows of the dataframe (plus one row with column headings).  Let's have a look at the column names:
+
 ```python
 print(df.columns)
 ```
+
+Md23: This is a markdown cell.
+
 ```python
-print(df['imdbRating'].dtype)
+print(df['imdbRating'].describe())
 ```
+
+Hmm... OK, it looks like the datatype is "object" rather than numbers.  Luckily this is easy to change in pandas
+
 ```python
 df["imdbRating"] = pd.to_numeric(df["imdbRating"])
-print(df["imdbRating"].dtype)
+print(df["imdbRating"].describe())
 ```
+Md24: This is a markdown cell.
 ```python
+df_no_rating = df[df["imdbRating"].isnull()]
 df_with_rating = df[df["imdbRating"].notnull()]
-print(df_with_rating.shape)
+print(df_no_rating.shape, df_with_rating.shape)
 ```
 ```python
 df_no_rating = df[df["imdbRating"].isnull()]

@@ -1,0 +1,122 @@
+# Challenge
+Using the file "resources/imdb.csv" (from Kaggle), figure out whether Action movies are better or worse than "Romance" movies.
+First, let's check that the file exists, and how many rows there are in it:
+
+
+
+
+```python
+import os
+if not os.path.exists("resources/imdb.csv"):
+    print("Doesn't exist!")
+else:
+    print(len(open("resources/imdb.csv").readlines()))
+```
+
+
+
+
+OK, so let's just read it straight into a pandas dataframe:
+
+
+
+
+```python
+import pandas as pd  
+df = pd.read_csv("resources/imdb.csv")
+```
+
+
+
+
+Ok, so that didn't work...   In fact the problem is that the file uses an escape character "\" before every comma in string fields.  
+Even the standard python csv module's "Sniffer" doesn't manage to detect this.
+Luckily though, we have the "clevercsv" tool developed at the Alan Turing Institute, which we can use in exactly the same way as the standard csv module:
+
+
+
+
+```python
+import clevercsv as csv
+import pandas as pd
+with open("resources/imdb.csv") as csvfile:
+    dialect = csv.Sniffer().sniff(csvfile.read())
+    csvfile.seek(0)
+    reader = csv.reader(csvfile, dialect)
+    rows = list(reader)
+    print(len(rows))
+    df = pd.DataFrame(rows[1:],columns=rows[0])
+```
+
+OK, we have read all 3999 rows of the dataframe (plus one row with column headings).  Let's have a look at the column names:
+
+```python
+print(df.columns)
+```
+
+Md23: This is a markdown cell.
+
+```python
+print(df['imdbRating'].describe())
+```
+
+Hmm... OK, it looks like the datatype is "object" rather than numbers.  Luckily this is easy to change in pandas
+
+```python
+df["imdbRating"] = pd.to_numeric(df["imdbRating"])
+print(df["imdbRating"].describe())
+```
+Md24: This is a markdown cell.
+```python
+df_no_rating = df[df["imdbRating"].isnull()]
+df_with_rating = df[df["imdbRating"].notnull()]
+print(df_no_rating.shape, df_with_rating.shape)
+```
+```python
+df_no_rating = df[df["imdbRating"].isnull()]
+print(df_no_rating.shape)
+```
+```r
+library(ggplot2)
+hist <- ggplot(df_no_rating, aes(x=type)) + geom_bar(stat="count")
+```
+```python
+movie_filter = df_no_rating["type"]=="video.movie"
+df_movie_no_rating = df_no_rating[movie_filter]
+print(df_movie_no_rating.shape)
+```
+```python
+for genre in ["Action","Romance"]:
+    print("Number of {} movies with no rating is {}".format(genre, pd.to_numeric(df_movie_no_rating[genre]).sum()) )
+```
+```python
+movie_filter = df_with_rating["type"]=="video.movie"
+df_movie_with_rating = df_with_rating[movie_filter]
+for genre in ["Action","Romance"]:
+    print("Number of {} movies with a rating is {}".format(genre, pd.to_numeric(df_movie_with_rating[genre]).sum()) )
+```
+```r
+library(ggplot2)
+ratingHist <- ggplot(df_movie_with_rating, aes(x=imdbRating)) + geom_histogram(bins=20) + theme_classic()
+```
+```python
+action_filter = df_movie_with_rating["Action"]=='1'
+df_action = df_movie_with_rating[action_filter]
+romance_filter = df_movie_with_rating["Romance"]=='1'
+df_romance = df_movie_with_rating[romance_filter]
+df_both = df_romance[action_filter]
+print("Numbers of action, romance, both are {} {} {}".format(len(df_action), len(df_romance), len(df_both)))
+```
+```python
+df_action = df_action
+```
+```python
+import matplotlib.pyplot as plt
+plt.hist([df_action["imdbRating"], df_romance["imdbRating"], df_both["imdbRating"]],label=["Action","Romance","Both"],stacked=True)
+plt.legend()
+```
+```python
+#
+ #   print(dataframe["imdbRating"].mean(), d["imdbRating"].std(), d["imdbRating"].max())
+print("ACTION \n{} \n\nROMANCE \n{}".format(df_action["imdbRating"].describe(), df_romance["imdbRating"].describe()))
+```

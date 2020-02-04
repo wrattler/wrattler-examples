@@ -1,6 +1,6 @@
 # wrattler-examples
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wrattler/wrattler-examples/data-wrangling-tutorial?urlpath=lab%2Ftree%2Fworkshop%2FExercise_1.wrattler)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wrattler/wrattler-examples/master?urlpath=lab)
 
 Easy-to-setup local deployment of the Wrattler notebook, using pre-built docker images pulled from dockerhub.
 

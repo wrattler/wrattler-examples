@@ -1,0 +1,7 @@
+FROM wrattler/wrattler_aiassistants:v0.10.1
+
+EXPOSE 5050
+
+WORKDIR /app/server
+
+CMD ["dotnet","bin/Debug/netcoreapp2.1/aiassistants.dll"]

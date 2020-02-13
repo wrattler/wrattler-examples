@@ -46,9 +46,7 @@ RUN apt-get update && apt-get install -y yarn
 RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
 RUN npm install http-server -g
 
-
 ## Jupyterlab
-
 RUN pip3 install jupyterlab
 RUN yarn add typescript
 RUN cd wrattler/jupyterlab; yarn install; jupyter labextension link .; jlpm run build; cd -;
@@ -56,14 +54,16 @@ RUN cd wrattler/jupyterlab; yarn install; jupyter labextension link .; jlpm run 
 COPY ./wrattler_start.sh /wrattler/wrattler_start.sh
 RUN chmod u+x /wrattler/wrattler_start.sh;
 
-WORKDIR /wrattler
-CMD ["./wrattler_start.sh"]
+#WORKDIR /wrattler
+#CMD ["./wrattler_start.sh"]
 
 # copy current working directory
 #ADD . /app
 #WORKDIR /app
 
+
+
 # expose the port and start running the Jug http server.
 #EXPOSE 7103
 #CMD ["Rscript", "app.R"]
-#CMD ["/bin/bash"]
+CMD ["/bin/bash"]

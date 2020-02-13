@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.1
+FROM wrattler/wrattler_base:v0.1.1
 
 RUN pip3 install --no-cache-dir notebook==5.*
 

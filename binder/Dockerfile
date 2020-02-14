@@ -1,6 +1,8 @@
 FROM wrattler/wrattler_base:v0.1.1
 
 RUN pip3 install --no-cache-dir notebook==5.*
+RUN pip3 install jupyter-server-proxy
+
 
 ARG NB_USER=jovyan
 ARG NB_UID=1000

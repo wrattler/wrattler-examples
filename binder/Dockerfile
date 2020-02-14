@@ -21,4 +21,9 @@ COPY . ${HOME}
 USER root
 RUN chown -R ${NB_UID} ${HOME}
 USER ${NB_USER}
-RUN cd ${HOME}/binder; pip install .;
+WORKDIR ${HOME}/binder
+RUN pip install .
+RUN chmod a+x wrattler_start_services.sh
+RUN chmod a+x start
+#RUN ./wrattler_start_services.sh &
+ENTRYPOINT ["./start"]

@@ -22,20 +22,20 @@ USER root
 RUN chown -R ${NB_UID} ${HOME}
 USER ${NB_USER}
 
+WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
 #RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout data-wrangling-tutorial; cd -;
 
 # AI assistants
-
-RUN dotnet restore /wrattler/aiassistants/server/
-RUN dotnet build /wrattler/aiassistants/server/
+RUN dotnet restore wrattler/aiassistants/server/
+RUN dotnet build wrattler/aiassistants/server/
 
 # Client
-RUN cd /wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
+RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
 
 # Jupyterlab
-RUN cd /wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
+RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
 
 
 WORKDIR ${HOME}/binder

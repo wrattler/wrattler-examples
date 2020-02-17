@@ -6,17 +6,8 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsof
 RUN dpkg -i packages-microsoft-prod.deb
 RUN apt-get install -y apt-transport-https; apt-get update; apt-get install -y dotnet-hosting-2.0.6
 RUN apt-get install -y dotnet-sdk-2.1
-
 RUN Rscript -e "install.packages(\"lpSolve\",repos=\"http://cran.us.r-project.org\")"
 RUN Rscript -e "devtools::install_github(\"tpetricek/datadiff\") "
-
-## Checkout Wrattler and switch to branch with AI-assistants
-RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
-#RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout data-wrangling-tutorial; cd -;
-
-### TRY NOT BUILDING THESE, MIGHT MESS UP PERMISSIONS LATER
-RUN dotnet restore /wrattler/aiassistants/server/
-RUN dotnet build /wrattler/aiassistants/server/
 
 ## Python (for python service and datastore)
 
@@ -34,27 +25,23 @@ ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
 RUN pip3 install --upgrade pip
-
 RUN pip3 install wrattler-python-service==0.7
 RUN pip3 install wrattler-data-store==0.5.1
 
-## Client
+## Client dependencies
 RUN apt-get install -y curl
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
 RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 RUN apt-get update && apt-get install -y yarn
-RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
 RUN npm install http-server -g
 
-## Jupyterlab
+## Jupyterlab dependencies
 RUN pip3 install jupyterlab
 RUN yarn add typescript
-RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
 
 ## Install SVN to allow us to checkout the resources directory directly
-
 RUN apt-get update
 RUN apt-get install -y apache2
 RUN apt-get install -y subversion libapache2-mod-svn libapache2-svn libsvn-dev

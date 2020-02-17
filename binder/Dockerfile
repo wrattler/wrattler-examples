@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.1.6
+FROM wrattler/wrattler_base:v0.1.7
 
 RUN pip3 install --no-cache-dir notebook==5.*
 RUN pip3 install jupyter-server-proxy

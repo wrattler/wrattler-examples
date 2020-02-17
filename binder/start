@@ -1,5 +1,5 @@
 #!/bin/bash
-http-server wrattler/client/public -c-1 --cors &
+http-server /wrattler/client/public -c-1 --cors &
 wrattler-data-store &
 wrattler-python-service &
 export R_SERVICE_HOME="~/wrattler/server/R"

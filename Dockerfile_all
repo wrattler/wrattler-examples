@@ -53,8 +53,6 @@ RUN pip3 install jupyterlab
 RUN yarn add typescript
 RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
 
-COPY ./wrattler_start.sh /wrattler/wrattler_start.sh
-RUN chmod a+x /wrattler/wrattler_start.sh;
 
 #WORKDIR /wrattler
 #CMD ["./wrattler_start.sh"]

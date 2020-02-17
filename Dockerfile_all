@@ -10,9 +10,8 @@ RUN apt-get install -y dotnet-sdk-2.1
 RUN Rscript -e "install.packages(\"lpSolve\",repos=\"http://cran.us.r-project.org\")"
 RUN Rscript -e "devtools::install_github(\"tpetricek/datadiff\") "
 
-## TMP just try master for now
-RUN git clone https://github.com/wrattler/wrattler
-##; cd wrattler; git checkout feature/spreadsheet; cd -;
+## TMP just try old branch for now
+RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout data-wrangling-tutorial; cd -;
 
 
 RUN dotnet restore /wrattler/aiassistants/server/

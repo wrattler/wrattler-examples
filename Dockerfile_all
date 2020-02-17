@@ -52,17 +52,12 @@ RUN pip3 install jupyterlab
 RUN yarn add typescript
 RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
 
+## Install SVN to allow us to checkout the resources directory directly
 
-#WORKDIR /wrattler
-#CMD ["./wrattler_start.sh"]
+RUN apt-get update
+RUN apt-get install -y apache2
+RUN apt-get install -y subversion libapache2-mod-svn libapache2-svn libsvn-dev
+RUN a2enmod dav dav_svn
+RUN service apache2 restart
 
-# copy current working directory
-#ADD . /app
-#WORKDIR /app
-
-
-
-# expose the port and start running the Jug http server.
-#EXPOSE 7103
-#CMD ["Rscript", "app.R"]
 CMD ["/bin/bash"]

@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.1.3
+FROM wrattler/wrattler_base:v0.1.4
 
 RUN pip3 install --no-cache-dir notebook==5.*
 RUN pip3 install jupyter-server-proxy
@@ -22,8 +22,9 @@ USER root
 RUN chown -R ${NB_UID} ${HOME}
 USER ${NB_USER}
 WORKDIR ${HOME}/binder
+
+# Use SVN(!) to get the resources directory from github
+RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
 RUN pip install .
-RUN chmod a+x wrattler_start_services.sh
 RUN chmod a+x start
-#RUN ./wrattler_start_services.sh &
 ENTRYPOINT ["./start"]

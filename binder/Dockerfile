@@ -24,7 +24,7 @@ RUN pip3 install jupyter-server-proxy
 # Install jupyter specifying extensions to go in home directory
 RUN mkdir ${HOME}/.jupyter/lab/applications
 ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
-cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
+#RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
 
 
 WORKDIR ${HOME}

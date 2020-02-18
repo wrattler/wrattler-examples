@@ -1,6 +1,5 @@
 FROM wrattler/wrattler_base:v0.1.8
 
-
 RUN pip3 install --no-cache-dir notebook==5.*
 RUN pip3 install jupyter-server-proxy
 
@@ -15,7 +14,6 @@ RUN adduser --disabled-password \
     --uid ${NB_UID} \
     ${NB_USER}
 
-
 # Make sure the contents of our repo are in ${HOME}
 COPY . ${HOME}
 USER root
@@ -23,8 +21,7 @@ RUN chown -R ${NB_UID} ${HOME}
 USER ${NB_USER}
 
 
-
-# Install jupyter specifying extensions to go in home directory
+# Install jupyter extensions in home directory
 RUN mkdir ${HOME}/.jupyter
 RUN mkdir ${HOME}/.jupyter/lab
 RUN mkdir ${HOME}/.jupyter/lab/applications
@@ -35,7 +32,6 @@ ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
-#RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout data-wrangling-tutorial; cd -;
 
 # AI assistants
 RUN dotnet restore wrattler/aiassistants/server/

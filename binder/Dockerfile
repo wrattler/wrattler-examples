@@ -27,6 +27,10 @@ RUN mkdir ${HOME}/.jupyter/lab
 RUN mkdir ${HOME}/.jupyter/lab/applications
 ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 
+# dummy to trigger
+RUN touch testfile
+
+
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;

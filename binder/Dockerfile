@@ -1,5 +1,9 @@
 FROM wrattler/wrattler_base:v0.1.8
 
+
+RUN pip3 install --no-cache-dir notebook==5.*
+RUN pip3 install jupyter-server-proxy
+
 ARG NB_USER=jovyan
 ARG NB_UID=1000
 ENV USER ${NB_USER}
@@ -18,8 +22,7 @@ USER root
 RUN chown -R ${NB_UID} ${HOME}
 USER ${NB_USER}
 
-RUN pip3 install --no-cache-dir notebook==5.*
-RUN pip3 install jupyter-server-proxy
+
 
 # Install jupyter specifying extensions to go in home directory
 RUN mkdir ${HOME}/.jupyter

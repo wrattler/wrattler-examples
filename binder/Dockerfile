@@ -26,8 +26,6 @@ RUN mkdir ${HOME}/.jupyter
 RUN mkdir ${HOME}/.jupyter/lab
 RUN mkdir ${HOME}/.jupyter/lab/applications
 ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
-#RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
-
 
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants

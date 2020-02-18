@@ -27,7 +27,6 @@ RUN mkdir ${HOME}/.jupyter/lab
 RUN mkdir ${HOME}/.jupyter/lab/applications
 ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 
-
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
@@ -41,7 +40,6 @@ RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
 
 # Jupyterlab
 RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
-
 
 WORKDIR ${HOME}/binder
 

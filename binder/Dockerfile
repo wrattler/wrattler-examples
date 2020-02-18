@@ -27,9 +27,6 @@ RUN mkdir ${HOME}/.jupyter/lab
 RUN mkdir ${HOME}/.jupyter/lab/applications
 ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 
-# dummy to trigger
-RUN touch testfile
-
 
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants

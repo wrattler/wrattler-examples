@@ -1,7 +1,6 @@
 FROM wrattler/wrattler_r_service_base:latest
 
 ## AI assistants
-
 RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
 RUN dpkg -i packages-microsoft-prod.deb
 RUN apt-get install -y apt-transport-https; apt-get update; apt-get install -y dotnet-hosting-2.0.6
@@ -41,11 +40,13 @@ RUN npm install http-server -g
 RUN pip3 install jupyterlab
 RUN yarn add typescript
 
+
 ## Install SVN to allow us to checkout the resources directory directly
 RUN apt-get update
 RUN apt-get install -y apache2
 RUN apt-get install -y subversion libapache2-mod-svn libapache2-svn libsvn-dev
 RUN a2enmod dav dav_svn
 RUN service apache2 restart
+
 
 CMD ["/bin/bash"]

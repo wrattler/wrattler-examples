@@ -66,3 +66,5 @@ pip install .
 cd ..
 # link resources directory so that .py or .R resources can be served by the client
 ln -s `pwd`/resources wrattler/client/public/
+
+# making a note to push an update 1

@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_racket_service:v0.10.1
+FROM wrattler/wrattler_racket_service:v0.10.2
 
 EXPOSE 7104
 

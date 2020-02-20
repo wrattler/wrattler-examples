@@ -32,6 +32,7 @@ WORKDIR ${HOME}
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
 
 # AI assistants
+ENV DATASTORE_URI http://localhost:7102
 RUN dotnet restore wrattler/aiassistants/server/
 RUN dotnet build wrattler/aiassistants/server/
 
@@ -44,7 +45,9 @@ RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; 
 WORKDIR ${HOME}/binder
 
 # Use SVN(!) to get the resources directory from github
-RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
+#RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
+RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/resources
+
 RUN pip install .
 RUN chmod a+x start
 ENTRYPOINT ["./start"]

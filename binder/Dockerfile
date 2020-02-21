@@ -48,6 +48,10 @@ WORKDIR ${HOME}/binder
 #RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
 RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/resources
 
+# Link the resources directory to somewhere accessible to the client,
+# so that it can serve e.g. python or .R files containing definitions.
+RUN ln -s ${HOME}/binder/resources ${HOME}/wrattler/client/public/resources
+
 RUN pip install .
 RUN chmod a+x start
 ENTRYPOINT ["./start"]

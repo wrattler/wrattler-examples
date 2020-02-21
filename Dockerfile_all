@@ -8,6 +8,8 @@ RUN apt-get install -y dotnet-sdk-2.1
 RUN Rscript -e "install.packages(\"lpSolve\",repos=\"http://cran.us.r-project.org\")"
 RUN Rscript -e "devtools::install_github(\"tpetricek/datadiff\") "
 
+RUN Rscript -e "install.packages('reshape2')"
+
 ## Python (for python service and datastore)
 
 RUN apt-get update; apt-get install -y python3
@@ -40,6 +42,8 @@ RUN npm install http-server -g
 RUN pip3 install jupyterlab
 RUN yarn add typescript
 
+## AI assistant python dependencies
+RUN pip3 install sklearn mpltools greenery clevercsv==0.4.3
 
 ## Install SVN to allow us to checkout the resources directory directly
 RUN apt-get update

@@ -14,6 +14,6 @@ then echo "Usage is 'build_release.sh <version>'  with version format vX.Y";
 fi;
 
 for i in `ls Dockerfile_*`;
-do sed "s/:v[0-9]*\.[0-9]*/:$VERSION/" $i > ${i}.new;
+do sed "s/:v[\.0-9]*/:$VERSION/" $i > ${i}.new;
    mv ${i}.new $i;
 done;

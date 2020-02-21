@@ -2,7 +2,7 @@
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wrattler/wrattler-examples/master?urlpath=lab)
 
-Easy-to-setup local deployment of the Wrattler notebook, using pre-built docker images pulled from dockerhub.
+Easy-to-setup local deployment of the Wrattler notebook, using pre-built docker images pulled from dockerhub, or cloud deployment on binder.
 
 ## Local setup
 
@@ -29,3 +29,7 @@ Once you have finished, you can stop the docker containers by running (from this
 ```
 docker-compose down
 ```
+
+## Cloud setup
+
+Click the "binder" button at the top of the page :)

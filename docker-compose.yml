@@ -87,6 +87,20 @@ services:
     volumes:
       - ./resources:/public
 
+
+  wrattler_aiassistants:
+    container_name: wrattler_wrattler_aiassistants_examples_1
+    build:
+      context: .
+      dockerfile: Dockerfile_aiassistants
+    environment:
+    - DATASTORE_URI=http://wrattler_wrattler_data_store_examples_1:7102
+    ports:
+    - "5050:5050"
+    networks:
+    - wrattler_nw
+
+
 networks:
   wrattler_nw:
     driver: bridge

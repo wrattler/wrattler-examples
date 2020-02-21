@@ -514,7 +514,7 @@ The four colours in the below plots hence represent different ranges of percenti
 ![#003B36](https://placehold.it/15/003B36/000000?text=+) : 75th-100th (i.e. have the highest number of total crimes)).
 
 ```r
-install.packages("reshape2")
+#install.packages("reshape2")
 library(reshape2)
 library(ggplot2)
 library(mltools)

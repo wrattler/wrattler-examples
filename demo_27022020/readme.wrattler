@@ -46,11 +46,18 @@ and documents the recent work on Wrattler.
    The easiest way to get them into Wrattler is to use the Pandas library, which can load 
    data from a URL.
 
+### AI assistants
+
+- `aiassistants.wrattler` - Data wrangling constitute 80\% of typical data engineering work.
+  This notebook demonstrates AI assistants, semi-automatic interactive tools to streamline
+  data wrangling tasks such as merging data, removing outliers and inferring data types.
+  
 ### Organizing code
 
 - `imports.wrattler` - Having large blocks of code in a notebook is inconvenient and a bad 
   software engineering practice. Wrattler lets you organize code using files. This example
   shows how to put helper functions into separate files and load them.
+
 
 ### Sample data analyses
 

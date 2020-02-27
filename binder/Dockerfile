@@ -47,10 +47,12 @@ WORKDIR ${HOME}/binder
 # Use SVN(!) to get the resources directory from github
 #RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
 RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/resources
+RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/demo_27022020
 
 # Link the resources directory to somewhere accessible to the client,
 # so that it can serve e.g. python or .R files containing definitions.
 RUN ln -s ${HOME}/binder/resources ${HOME}/wrattler/client/public/resources
+RUN ln -s ${HOME}/binder/demo_27022020 ${HOME}/wrattler/client/public/demo_27022020
 
 RUN pip install .
 RUN chmod a+x start

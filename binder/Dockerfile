@@ -29,7 +29,7 @@ ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
-RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout feature/spreadsheet; cd -;
+RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
 
 # AI assistants
 ENV DATASTORE_URI http://localhost:7102

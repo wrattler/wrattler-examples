@@ -1,6 +1,22 @@
 # Monthly progress updates
 
-## November 2019 
+## February 2020
+* **Binder improvements [hosting]** - Use Dockerfile to launch Wrattler more reliably in Binder
+* **AI assistants [aia]** - Supporting AI assistants in Binder-hosted Wrattler
+* **AI assistants [aia]** - Revised AI assistants paper submitted to KDD
+* **Improvements [use]** - Numerous improvements in AI assistants usability
+
+## January 2020
+* **Transparent data visualizations [langs]** - Data visualizations with automatic linking
+* **Improvements [use]** - Improvements to support data viz in Turing paper analysis
+* **Transparent data visualizations [langs]** - Further work on integrating Fluid into Wrattler
+
+## December 2019
+* **Interactive data editor [use]** - prototyping editor for manual data tweaks to support a use case
+* **Transparent data visualizations [langs]** - integrating work on transparent data visualization language (Fluid project)
+* **Docker improvements [hosting]** - improve Docker scripts for easier local testing of Wrattler
+
+## November 2019
 * **Initial web page [docs]** - created a minimal template for a web page at www.wrattler.org
 * **Dependency graph visualizer [graph]** - expose graph to JS cells & create minimal graph visualizer
 * **Testing and fixes [imports]** - support loading JS files and a number of stability improvements
@@ -14,10 +30,10 @@
 
 ## September 2019
 * **AI assistants [aia]** - initial work on integrating AI assistants into Wrattler, building a simple "outlier detector" assistant as an example and creating easy to use stdin/stdout API for assistants
-* **Binder integration [hosting]** - Support for specifying locations of langauge runtimes and data store in order to support Binder/SageMaker proxies, exploring options for hosting using Binder 
+* **Binder integration [hosting]** - Support for specifying locations of langauge runtimes and data store in order to support Binder/SageMaker proxies, exploring options for hosting using Binder
 
 ## August 2019
-* **Improvements [use]** - Numerous improvements to make user experience smooth, especially inside JupyterLab, which often reloads notebooks for internal reasons. Fixed hashing of code cells to improve caching and make re-evaluation faster. 
+* **Improvements [use]** - Numerous improvements to make user experience smooth, especially inside JupyterLab, which often reloads notebooks for internal reasons. Fixed hashing of code cells to improve caching and make re-evaluation faster.
 * **SageMaker [hosting]** - Investigate how to run Wrattler inside SageMaker - this can be done by running Wrattler services in Docker, but to access those from the client, we need to go via SageMaker proxy. This works for some requests, but it does not work for everything we need. We are investigating how to address the remaining issues.
 * **User experience [use]** - A number of small improvements to improve user experience - for example, added "up" and "down" arrows to move cells around and added a new panel that lets users add new cells to an empty notebook.
 
@@ -38,15 +54,15 @@
 * **JupyterLab [hosting]** - Make JupyterLab a part of the standard Wrattler examples by running it inside Docker, alongside of all the other Wrattler services
 
 ## April 2019
-* **Arrow support [efficiency]** - Implemented new data store that supports the Arrow serialization format for more efficient (binary) transfer of data frames. This is now also supported in R and Python services, but the client still uses JSON. 
+* **Arrow support [efficiency]** - Implemented new data store that supports the Arrow serialization format for more efficient (binary) transfer of data frames. This is now also supported in R and Python services, but the client still uses JSON.
 * **Previews [efficiency]** - Wrattler client can now work with just previews - if the data is never fully loaded in the client (e.g. to run some JavaScript code on it), the client will only evaluate a preview.
 * **JupyterLab [hosting]** - Initial version of JupyterLab integration and necessary related changes, such as restructuring Wrattler so that it can support multiple concurrently opened notbooks.
 
-# Agreed areas of work 
+# Agreed areas of work
 
 Work addressing needs of specific use cases
 
-- **[use]** Supporting three concrete use cases 
+- **[use]** Supporting three concrete use cases
 - **[efficiency]** Larger data frames using Arrow or Spark, efficient previews
 - **[hosting]** Supporting JupyterLab and Binder
 - **[docs]** Documenting public interface

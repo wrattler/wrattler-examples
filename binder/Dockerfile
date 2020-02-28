@@ -1,5 +1,6 @@
 FROM wrattler/wrattler_base:v0.1.10
 
+RUN apt-get update; apt-get install python-gi-cairo
 RUN pip3 install --no-cache-dir notebook==5.*
 RUN pip3 install jupyter-server-proxy
 

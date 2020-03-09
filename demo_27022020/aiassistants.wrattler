@@ -1,0 +1,83 @@
+<div style="max-width:700px">
+
+# Semi-automatic data cleaning with AI assistants
+
+Data wrangling such as obtaining data from various data sources, joining mismatched datasets and
+correcting erroneous records constitute 80\% of typical data engineering work.
+Despite the rise of machine learning and artificial intelligence, data wrangling remains a tedious and manual task.
+
+This notebook demonstrates AI assistants, a class of semi-automatic interactive tools to streamline
+data wrangling. An AI assistant guides the analyst through a specific data wrangling task.
+It recommends a suitable data transformation, reflecting the constraints
+obtained through interaction between an AI component and the analyst.
+
+## Removing outliers with an AI assistant
+
+The following cell loads data on rail and air traffic accidents in the EU published by Eurostat:
+
+</div>
+
+```python
+import requests
+
+t = "https://raw.githubusercontent.com/tpetricek/histogram/"
+avia = pd.read_csv(t + "master/traffic/clean/avia.csv")
+rail = pd.read_csv(t + "master/traffic/clean/rail.csv")
+```
+
+<div style="max-width:700px">
+
+In the `avia` dataframe, a single row represents air traffic accidents 
+involving airplanes that were registered in a given country (identified by `c_regis`)
+that occurred in another country (identified by `geo`). However, there are also
+aggregate rows that record data for the whole EU. Those have `EU28` as the value
+of `geo` or `c_regis`.
+
+To do our own computation, we typically need to remove such aggregate rows. To do this
+click "add below" and choose "ai assistant" cell. Then select the "Outlier detection"
+AI assistant and use the `avia` dataframe as the input. If you then click the "+" button,
+you will see that the assistant correctly recognizes such outlier rows and makes it easy
+to filter them! Once you select the necessary filters, you can name your resulting dataframe
+by filling in the `<name>` and use the result in subsequent cells.
+
+</div>
+
+```python
+# Do something with the filtered aviation accidents!
+```
+
+## Joining Broadband quality datasets
+
+The following loads data on broadband quality in the UK for years 2013, 2014 and 2015.
+
+```python
+import requests
+w = "https://raw.githubusercontent.com/tpetricek/wrattler-workyard/"
+bb13 = pd.read_csv(w + "master/broadband/broadband2013.csv")
+bb14 = pd.read_csv(w + "master/broadband/broadband2014.csv")
+bb15 = pd.read_csv(w + "master/broadband/broadband2015.csv")
+```
+
+<div style="max-width:700px">
+
+As you can see, the data is published in inconsistent formats. We can use the Datadiff AI assistant
+to merge the data files. First, we'll select a subset of the 2015 columns that we are interested in:
+
+</div>
+
+```r
+bb15nice <- subset(bb15, select=c("URBAN2","Nation","DL24hrmean","UL24hrmean","Latency24hr","Web24hr"))
+```
+
+<div style="max-width:700px">
+
+Now, we want to find corresponding columns in the `bb14` dataframe. To do this, we can use Datadiff.
+As you can see, Datadiff correctly finds 5 out of the 6 columns that we are interested in. You can 
+help it match the 6th column by clicking the "+" button and adding constraints.
+
+</div>
+
+```ai assistant
+Data diff:dirty=bb14,clean=bb15nice
+bb14nice
+```

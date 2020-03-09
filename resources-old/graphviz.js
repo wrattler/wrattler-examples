@@ -16,13 +16,13 @@ function createGraphVizBody(id) {
     added[node.hash] = true;
     
     let lbl = node.hash;
-    if (node.kind == "export") lbl = "<b>var</b> " + node.variableName;
+    if (node.kind) lbl = node.language + " " + node.kind; 
+    else if (node.kind == "export") lbl = "export " + node.variableName;
     else if (node.language == "markdown") lbl = "markdown";
-    else if (node.kind) lbl = node.language + " " + node.kind; 
 
     let clr = colors[Object.keys(context.languagePlugins).indexOf(node.language) % 5];
 
-    let gn = {"id":node.hash, "label":lbl, "color":clr, "level":lvl, "font": { "multi": true } }
+    let gn = {"id":node.hash, "label":lbl, "color":clr, "level":lvl }
     if (node.kind == "code" || node.language == "markdown") { 
       gn.physics = false;
       gn.x = 100;

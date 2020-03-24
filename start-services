@@ -1,0 +1,9 @@
+#!/bin/bash
+http-server /wrattler/client/public -c-1 --cors &
+wrattler-data-store &
+wrattler-python-service &
+export R_SERVICE_HOME="/wrattler/server/R"
+Rscript /wrattler/server/R/app.R &
+cd /wrattler/aiassistants/server; dotnet bin/Debug/netcoreapp2.1/aiassistants.dll &
+cd -
+exec "$@"

@@ -9,4 +9,4 @@ before_install:
   - docker build -t test_wrattler_examples -f Dockerfile_local .
 
 script:
-  - docker run test_wrattler_examples /bin/bash -c "Rscript run-tests.r"
+  - docker run test_wrattler_examples /bin/bash -c "cd /wrattler/server/R;Rscript run-tests.r"

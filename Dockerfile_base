@@ -59,10 +59,6 @@ RUN service apache2 restart
 ## Checkout Wrattler and switch to branch with AI-assistants
 RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
 
-# AI assistants
-ENV DATASTORE_URI http://localhost:7102
-RUN dotnet restore wrattler/aiassistants/server/
-RUN dotnet build wrattler/aiassistants/server/
 
 # Client
 RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -

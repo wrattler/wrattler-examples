@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.1.10
+FROM wrattler/wrattler_base:v0.2
 
 RUN apt-get update; apt-get install -y python-gi-cairo
 RUN pip3 install --no-cache-dir notebook==5.*

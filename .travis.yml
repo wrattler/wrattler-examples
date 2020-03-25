@@ -6,12 +6,7 @@ services:
   - docker
 
 before_install:
-  - docker-compose build
+  - docker build -t test_wrattler_examples -f Dockerfile_local .
 
 script:
-  - docker run wrattler-examples_wrattler_r_service /bin/bash -c "Rscript run-tests.r"
-  - docker run wrattler-examples_wrattler_python_service /bin/bash -c "export WRATTLER_LOCAL_TEST=True;pytest -s"
-  - docker run wrattler-examples_wrattler_data_store /bin/bash -c "export WRATTLER_LOCAL_STORAGE=True;pytest -s"
-
-after_success:
-  - docker-compose down
+  - docker run test_wrattler_examples /bin/bash -c "cd /wrattler/server/R;Rscript run-tests.r"

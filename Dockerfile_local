@@ -1,0 +1,9 @@
+FROM wrattler/wrattler_base:v0.2
+# Copy current directory to docker image
+ADD . /app
+WORKDIR /app
+# Install services so they can be started by jupyter server proxy
+RUN cd /app/binder; pip install .
+# Script to start running the services
+RUN chmod a+x start-services
+ENTRYPOINT ["./start-services"]

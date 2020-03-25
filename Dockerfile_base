@@ -3,7 +3,7 @@ FROM wrattler/wrattler_r_service_base:latest
 ## AI assistants
 RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
 RUN dpkg -i packages-microsoft-prod.deb
-RUN apt-get install -y apt-transport-https; apt-get update; apt-get install -y dotnet-hosting-2.0.6
+RUN apt-get update; apt-get install -y apt-transport-https; apt-get update; apt-get install -y dotnet-hosting-2.0.6
 RUN apt-get install -y dotnet-sdk-2.1
 RUN Rscript -e "install.packages(\"lpSolve\",repos=\"http://cran.us.r-project.org\")"
 RUN Rscript -e "devtools::install_github(\"tpetricek/datadiff\") "
@@ -39,7 +39,11 @@ RUN apt-get update && apt-get install -y yarn
 RUN npm install http-server -g
 
 ## Jupyterlab dependencies
-RUN pip3 install jupyterlab
+RUN apt-get update; apt-get install -y python-gi-cairo libcairo2-dev
+RUN pip3 install --no-cache-dir notebook==5.*
+RUN pip3 install jupyter-server-proxy
+RUN pip3 install jupyterlab==1.2.3
+RUN pip3 install pycairo
 RUN yarn add typescript
 
 ## AI assistant python dependencies
@@ -51,5 +55,23 @@ RUN apt-get install -y apache2
 RUN apt-get install -y subversion libapache2-mod-svn libapache2-svn libsvn-dev
 RUN a2enmod dav dav_svn
 RUN service apache2 restart
+
+## Checkout Wrattler and switch to branch with AI-assistants
+RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
+
+# AI assistants
+ENV DATASTORE_URI http://localhost:7102
+RUN dotnet restore wrattler/aiassistants/server/
+RUN dotnet build wrattler/aiassistants/server/
+
+# Client
+RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -
+
+# Jupyterlab
+RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; jupyter labextension install;  jlpm run build; cd -;
+
+# For running python tests
+RUN pip3 install pytest
+
 
 CMD ["/bin/bash"]

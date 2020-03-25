@@ -1,7 +1,0 @@
-FROM wrattler/wrattler_python_service:v0.10.3
-
-WORKDIR /app
-
-ENV FLASK_APP app.py
-EXPOSE 7101
-CMD ["python3","app.py"]

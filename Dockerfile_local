@@ -1,4 +1,12 @@
-FROM wrattler/wrattler_base:v0.2
+FROM wrattler/wrattler_base:v0.4
+
+# install AI assistants here to avoid clash (permissions) with binder version
+# AI assistants
+ENV DATASTORE_URI http://localhost:7102
+RUN dotnet restore /wrattler/aiassistants/server/
+RUN dotnet build /wrattler/aiassistants/server/
+
+
 # Copy current directory to docker image
 ADD . /app
 WORKDIR /app

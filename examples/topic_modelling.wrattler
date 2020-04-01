@@ -156,9 +156,6 @@ addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
 
 ```
 
-
-```
-
 ## Topic labeling
 
 For now, each topic has a number, it is described as a distribution over the vocabulary and it has associated articles.

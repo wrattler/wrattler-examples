@@ -70,7 +70,7 @@ for f in zf.infolist():
 
 ```
 
-Merge this will a table of information about publications by various Turing authors, using the `paper_id`.
+Now merge this dataframe with a table of information about publications by various Turing authors, using the `paper_id`.
 
 ```python
 import pandas as pd
@@ -88,7 +88,7 @@ full_data = pd.merge(df, cleaned_data, on="paper_id", how="inner")
 
 ## Part 2: Analyse the (cleaned) data
 
-Here we can load in directly an example csv file that is the output of Part 1.
+Here we can load in directly an example csv file that is a subset (for speed) of the output of Part 1.
 We will use this to create two dataframes:
 - `author_info`: unique ID for each row is a (`name`, `paper_id`) pair where `name` is a Turing researcher
 - `publications_data`: each row is a publication with a `paper_id` and the `full_text`

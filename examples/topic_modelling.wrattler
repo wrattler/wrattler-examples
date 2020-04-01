@@ -10,7 +10,7 @@ modelling analysis is performed.
 ## Part 1: Clean and format text data
 
 Firstly, we downloaded PDF files of open source versions of articles and extracted text from the PDFs using [NORMA](https://github.com/ContentMine/norma).
-The next step formats this data and prepares it for analysis.
+The next step formats this data and prepares it for analysis using some tools from the Natural Language Toolkit nltk.
 
 
 ```python
@@ -25,6 +25,7 @@ from nltk.corpus import stopwords
 
 import re
 import pandas as pd
+import zipfile
 
 def clean_text(line):
     """
@@ -51,26 +52,30 @@ def clean_text(line):
 
 cleaned_data = pd.DataFrame(columns=['paper_id', 'full_text', 'length'])
 
-for root, _, files in os.walk("resources/data_files/turing-papers/"):
-    for file in files:
-        if file.endswith(".txt"):
-            with open(os.path.join(root, file), 'r') as article:
-                cleaned_text = [clean_text(line) for line in article]
-                cleaned_data = cleaned_data.append(
-                    {"paper_id": root.split('/')[-1],
-                    "full_text": ' '.join(cleaned_text),
-                    "length": len(cleaned_text)
-                    }, ignore_index=True
-            )
+os.system("wget https://wrattler.blob.core.windows.net/wrattler/TuringPapers.zip -O /tmp/TuringPapers.zip")
 
-# cleaned_data.to_csv("resources/data_files/cleaned_data.csv", index=False)
+zf = zipfile.ZipFile("/tmp/TuringPapers.zip")
+for f in zf.infolist():
+    filename = f.filename
+    if filename.endswith(".txt"):
+       article = zf.read(filename).decode("utf-8")
+       paper_id = filename.split("/")[0]
+       cleaned_text = [clean_text(line) for line in article.split("\n")]
+       cleaned_data = cleaned_data.append(
+             	           {"paper_id": paper_id,
+                    	   "full_text": ' '.join(cleaned_text),
+                    	   "length": len(cleaned_text)
+                    	   }, ignore_index=True
+            		   )
+
 ```
 
+Merge this will a table of information about publications by various Turing authors, using the `paper_id`.
 
 ```python
 import pandas as pd
 
-df = pd.read_csv("resources/data_files/publications_eng.csv", encoding="ISO-8859-1")
+df = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/publications_eng.csv", encoding="ISO-8859-1")
 
 df['ak_keywords'] = df.loc[:,'keyword_0':'keyword_26'].fillna('').apply("; ".join, axis=1)
 df['paper_id'] = df['paper_id'].apply(str)
@@ -79,7 +84,6 @@ df = df[['author_id', 'full_name', 'affiliation', 'paper_id', 'ak_keywords']]
 
 full_data = pd.merge(df, cleaned_data, on="paper_id", how="inner")
 
-# full_data.to_csv("resources/data_files/final_dataset_full.csv")
 ```
 
 ## Part 2: Analyse the (cleaned) data
@@ -94,7 +98,6 @@ We want to use each article only once when fitting the model and need to keep tr
 
 
 ```python
-import pandas as pd
 
 publications_data = pd.read_csv('https://wrattler.blob.core.windows.net/wrattler/topic-modelling-turing.csv')
 publications_data = publications_data.rename(columns={'full_name': 'name', 'current_uni': 'uni'})
@@ -115,10 +118,21 @@ publications_data = publications_data[
     ].reset_index(drop=True)
 ```
 
-## Fit model to data
+## Fit model to data and visualize
+
+We will now do "Latent Dirichlet Allocation" to obtain a probability distribution across all topics.
+
+We will then visualize the output using the `pyLDAvis` package.  The output of this is javascript, which we can view using Wrattler's `addOutput` function.
+If you click on the "output" tab once the cell has finished running (note that this may take some time!) you should get the interactive visualization.
+
 
 ```python
-import pandas as pd
+
+import os
+os.system("pip3 install pyLDAvis")
+
+import pyLDAvis
+import pyLDAvis.sklearn
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
@@ -137,22 +151,12 @@ lda.fit(dtm)
 topic_term_dists = lda.components_ / lda.components_.sum(axis=1)[:, None]
 doc_topic_dists = lda.transform(dtm)
 
-#topic_term_dists.to_csv('resources/data_files/topic_term_dists.csv')
-#doc_topic_dists.to_csv('resources/data_files/doc_topic_dists.csv')
+prepared_data = pyLDAvis.sklearn.prepare(lda, dtm, vectorizer)
+addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
+
 ```
 
 
-## Visualise topics
-
-```python
-import os
-os.system("pip3 install pyLDAvis")
-
-import pyLDAvis
-import pyLDAvis.sklearn
-
-prepared_data = pyLDAvis.sklearn.prepare(lda, dtm, vectorizer)
-addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
 ```
 
 ## Topic labeling
@@ -166,7 +170,6 @@ To do that:
 
 
 ```python
-import pandas as pd
 
 def _top(df, col):
     return df.sort_values(col, ascending=False).index

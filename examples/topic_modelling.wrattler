@@ -31,7 +31,7 @@ def clean_text(line):
     """
     1. Removes:
     - digits, special characters and punctuation
-    - English stop words
+    - English stop words + University names
     2. Stemms words
     """
 
@@ -171,7 +171,7 @@ To do that we look at:
 1. The top words per topic
 2. The top articles per topic (specifically their titles and associated keywords)
 
-For example, topic 2 seems to be on analysis of financial markets data.
+Below we show this information for the first five topics. Based on this, we could for example conclude that topic 2 is analysis of financial markets data. Some topics are easier to interpret than others.
 
 ```python
 
@@ -207,9 +207,7 @@ for i in range(5):
 
 ## Top topics by researcher
 
-- For each document, we have a distribution of topics in that document.
-- We also know what researchers are associated with what document.
-- We want to know the average document topic distribution for each researcher.
+Finally, we want to know the average topic distribution for each researcher. For each document, we have a distribution of topics in that document. We also know what researchers are associated with what document. We just need to combine this information.
 
 The `author_topic_dists` table shows the percentage of each topic contained in the articles of each author. From this we can see, for example, that of the five authors Tobias Preis published the most on topic 2 (the topics are numbered 0-14).
 

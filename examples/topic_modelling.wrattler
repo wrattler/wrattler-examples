@@ -80,7 +80,7 @@ df = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/publications_e
 df['ak_keywords'] = df.loc[:,'keyword_0':'keyword_26'].fillna('').apply("; ".join, axis=1)
 df['paper_id'] = df['paper_id'].apply(str)
 df = df.rename(columns={"standard_name":"full_name", "affiliation":"current_uni"})
-df = df[['author_id', 'full_name', 'affiliation', 'paper_id', 'ak_keywords']]
+df = df[['author_id', 'full_name', 'current_uni', 'paper_id', 'ak_keywords']]
 
 full_data = pd.merge(df, cleaned_data, on="paper_id", how="inner")
 

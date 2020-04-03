@@ -71,8 +71,7 @@ for f in zf.infolist():
 ```
 
 Now merge this dataframe with a table of information about the publications by various Turing authors, using the `paper_id`.
-This information includes a list of keywords associated with each article extracted from Microsoft's [Academic Knowledge API](https://docs.microsoft.com/en-us/academic-services/project-academic-knowledge/introduction).
-We will use this information later to help interpret the outputs of the analysis.
+We will use this information (e.g., keywords associated with the article) later to help interpret the outputs of the analysis.
 
 ```python
 import pandas as pd
@@ -90,15 +89,13 @@ full_data = pd.merge(df, cleaned_data, on="paper_id", how="inner")
 
 ## Part 2: Analyse the (cleaned) data
 
-Here we can load in directly an example csv file that is a subset (for speed) of the output of Part 1.
+Here we can load in directly an example csv file of the output of Part 1 and choose a subset of the data (for speed).
 We will use this to create two dataframes:
 - `author_info`: unique ID for each row is a (`name`, `paper_id`) pair where `name` is a Turing researcher
 - `publications_data`: each row is a publication with a `paper_id` and the `full_text`
 
 Some articles were published by multiple Turing researchers so `author_info` might have more rows than `publications_data`.
 We want to use each article only once when fitting the model and need to keep track of who is associated with each article.
-
-To speed up the analysis, we chose five of the Turing authors to focus on.
 
 ```python
 
@@ -126,7 +123,7 @@ publications_data = publications_data[
 
 We will now do "Latent Dirichlet Allocation" (LDA) on the text data.
 
-First, we specify how many unique topics we expect there to be across all articles (we chose 15 topics). We also transform the text data into word counts for analysis. LDA takes this count data and returns, for each article, a probability distribution over all topics.
+First, we specify how many unique topics we expect there to be across all articles (we chose 15 topics). We also transform the text data into word counts for the analysis. LDA takes this count data and returns, for each article, a probability distribution over the 15 topics.
 
 We then visualize the output using the `pyLDAvis` package.  The output of this is javascript, which we can view using Wrattler's `addOutput` function.
 If you click on the "output" tab once the cell has finished running (note that this may take some time!) you should get the interactive visualization.
@@ -157,8 +154,8 @@ lda.fit(dtm)
 topic_term_dists = lda.components_ / lda.components_.sum(axis=1)[:, None]
 doc_topic_dists = lda.transform(dtm)
 
-prepared_data = pyLDAvis.sklearn.prepare(lda, dtm, vectorizer)
-addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
+#prepared_data = pyLDAvis.sklearn.prepare(lda, dtm, vectorizer)
+#addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
 ```
 
 
@@ -171,18 +168,25 @@ To do that we look at:
 1. The top words per topic
 2. The top articles per topic (specifically their titles and associated keywords)
 
-Below we show this information for the first five topics. Based on this, we could for example conclude that topic 2 is analysis of financial markets data. Some topics are easier to interpret than others.
+Below we show this information for the top seven topics. Based on this, we could for example conclude that topic 1 is broadly text data analysis and topic 5 twitter data analysis. Similarly, we could say topic 7 is analysis of financial markets data. We can see there is subjectivity in how the topics are labeled and some topics are easier to interpret than others.
 
 ```python
 
 def _top(df, col):
     return df.sort_values(col, ascending=False).index
 
+def order_topics():
+    """
+    Order topics by overall size/prevalence in documents (same as pyLDAvis).
+    Return the topic numbers in this order.
+    """
+    return doc_topic_dists.sum().sort_values(ascending=False).index
+
 def top_terms(topic, n=10):
     """
     Gets indexes of n top topic terms and returns the terms (retrieved from feature_names).
     """
-    word_idx = _top(topic_term_dists.T, topic)[0:n]
+    word_idx = _top(topic_term_dists.T, int(topic))[0:n]
     return [feature_names.iloc[int(idx)][0] for idx in word_idx]
 
 def top_docs(topic, info, n=5):
@@ -192,14 +196,16 @@ def top_docs(topic, info, n=5):
     doc_idx = _top(doc_topic_dists, str(topic))[0:n]
     return publications_data.loc[doc_idx, info]
 
-for i in range(5):
-  print("TOPIC " + str(i))
+ordered_topics = order_topics()
+
+for i, topic in enumerate(ordered_topics[:7]):
+  print("TOPIC " + str(i+1))
   print("Top terms:")
-  print(top_terms(i))
+  print(top_terms(topic))
   print("Top article titles:")
-  print(top_docs(i, 'title').to_list())
+  print(top_docs(topic, 'title').to_list())
   print("Top article keywords:")
-  print(top_docs(i, 'ak_keywords').to_list())
+  print(top_docs(topic, 'ak_keywords').to_list())
   print("")
 ```
 
@@ -209,7 +215,9 @@ for i in range(5):
 
 Finally, we want to know the average topic distribution for each researcher. For each document, we have a distribution of topics in that document. We also know what researchers are associated with what document. We just need to combine this information.
 
-The `author_topic_dists` table shows the percentage of each topic contained in the articles of each author. From this we can see, for example, that of the five authors Tobias Preis published the most on topic 2 (the topics are numbered 0-14).
+The `author_topic_dists` table shows the percentage of each topic contained in the articles of each author. Each row is a topic and each column a researcher.
+
+From this we can see, for example, that of the five authors Maria Liakata published the most on text and twitter data analysis and Tobias Preis published the most on analysis of financial markets. This is consistent with what we know of their research.
 
 ```python
 import pandas as pd
@@ -224,7 +232,12 @@ author_topic_dists = doc_topic_dists.merge(
     right_on='paper_id'
     )
 
-author_topic_dists = (author_topic_dists.loc[:, author_topic_dists.columns != 'paper_id'
-    ].groupby('name').mean().replace(np.nan, 0)*100).T
+author_topic_dists = (
+    author_topic_dists.loc[:, author_topic_dists.columns != 'paper_id'
+    ].groupby('name'
+    ).mean().replace(np.nan, 0)*100
+    ).T
 
+# rows are topics - reorder by (overall) size to have same order as above
+author_topic_dists = author_topic_dists.reindex(ordered_topics['0'].values)
 ```

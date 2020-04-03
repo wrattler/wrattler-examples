@@ -1,7 +1,7 @@
 # wrattler-examples
 
-![Build status](https://api.travis-ci.org/wrattler/wrattler-examples.svg?branch=feature/consolidate-docker)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wrattler/wrattler-examples/master?urlpath=lab)
+![Build status](https://api.travis-ci.org/wrattler/wrattler-examples.svg?branch=master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wrattler/wrattler-examples/feature/consolidate-examples?urlpath=lab/tree/examples)
 
 Easy-to-setup local deployment of the Wrattler notebook, using pre-built docker images pulled from dockerhub, or cloud deployment on binder.
 

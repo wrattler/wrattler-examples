@@ -1,0 +1,230 @@
+# Topic Modelling.
+
+This analysis aims to illustrate the breadth of topics covered by publications by Turing researchers.  A blog post describing
+the method and some early results can be found [here](https://www.turing.ac.uk/research/research-programmes/research-engineering/programme-articles/turings-research-perspective-machine).
+
+This notebook is divided into two parts.  **Part 1** deals with taking the raw text data, extracting, formatting and cleaning it.
+However, you may wish to skip straight to **Part 2**, where a pre-prepared input file can be loaded, and the further topic
+modelling analysis is performed.
+
+## Part 1: Clean and format text data
+
+Firstly, we downloaded PDF files of open source versions of articles and extracted text from the PDFs using [NORMA](https://github.com/ContentMine/norma).
+The next step formats this data and prepares it for analysis using some tools from the Natural Language Toolkit nltk.
+
+
+```python
+import os
+os.system("pip3 install nltk")
+
+import nltk
+nltk.download('stopwords')
+
+from nltk.stem.porter import PorterStemmer
+from nltk.corpus import stopwords
+
+import re
+import pandas as pd
+import zipfile
+
+def clean_text(line):
+    """
+    1. Removes:
+    - digits, special characters and punctuation
+    - English stop words + University names
+    2. Stemms words
+    """
+
+    line = line.replace("/", " ").replace("-", " ").replace("  ", " ")
+    pattern = re.compile("[^A-Za-z\s]+")
+    line = pattern.sub('', line).strip()
+
+    # NOTE: longest word in major dictionary has 45 letters
+    stop_words = stopwords.words('english') + ['oxford', 'cambridge', 'warwick', 'edinburgh', 'ucl']
+    stemmer = PorterStemmer()
+    clean_text = [
+        stemmer.stem(word) for word in line.split()
+        if word not in stop_words and len(word) <= 45
+        ]
+
+    return " ".join(clean_text)
+
+
+cleaned_data = pd.DataFrame(columns=['paper_id', 'full_text', 'length'])
+
+os.system("wget https://wrattler.blob.core.windows.net/wrattler/TuringPapers.zip -O /tmp/TuringPapers.zip")
+
+zf = zipfile.ZipFile("/tmp/TuringPapers.zip")
+for f in zf.infolist():
+    filename = f.filename
+    if filename.endswith(".txt"):
+       article = zf.read(filename).decode("utf-8")
+       paper_id = filename.split("/")[0]
+       cleaned_text = [clean_text(line) for line in article.split("\n")]
+       cleaned_data = cleaned_data.append(
+             	           {"paper_id": paper_id,
+                    	   "full_text": ' '.join(cleaned_text),
+                    	   "length": len(cleaned_text)
+                    	   }, ignore_index=True
+            		   )
+
+```
+
+Now merge this dataframe with a table of information about the publications by various Turing authors, using the `paper_id`.
+This information includes a list of keywords associated with each article extracted from Microsoft's [Academic Knowledge API](https://docs.microsoft.com/en-us/academic-services/project-academic-knowledge/introduction).
+We will use this information later to help interpret the outputs of the analysis.
+
+```python
+import pandas as pd
+
+df = pd.read_csv("https://wrattler.blob.core.windows.net/wrattler/publications_eng.csv", encoding="ISO-8859-1")
+
+df['ak_keywords'] = df.loc[:,'keyword_0':'keyword_26'].fillna('').apply("; ".join, axis=1)
+df['paper_id'] = df['paper_id'].apply(str)
+df = df.rename(columns={"standard_name":"full_name", "affiliation":"current_uni"})
+df = df[['author_id', 'full_name', 'current_uni', 'paper_id', 'ak_keywords']]
+
+full_data = pd.merge(df, cleaned_data, on="paper_id", how="inner")
+
+```
+
+## Part 2: Analyse the (cleaned) data
+
+Here we can load in directly an example csv file that is a subset (for speed) of the output of Part 1.
+We will use this to create two dataframes:
+- `author_info`: unique ID for each row is a (`name`, `paper_id`) pair where `name` is a Turing researcher
+- `publications_data`: each row is a publication with a `paper_id` and the `full_text`
+
+Some articles were published by multiple Turing researchers so `author_info` might have more rows than `publications_data`.
+We want to use each article only once when fitting the model and need to keep track of who is associated with each article.
+
+To speed up the analysis, we chose five of the Turing authors to focus on.
+
+```python
+
+turing_subset = ['jon crowcroft',
+                  'charles sutton',
+                  'carola-bibiane schonlieb',
+                  'maria liakata',
+                  'tobias preis'
+                  ]
+
+publications_data = pd.read_csv('https://wrattler.blob.core.windows.net/wrattler/topic-modelling-turing.csv')
+publications_data = publications_data.rename(columns={'full_name': 'name', 'current_uni': 'uni'})
+publications_data = publications_data.loc[publications_data['name'].isin(turing_subset)]
+
+author_info = publications_data.loc[:, publications_data.columns != 'full_text']
+
+publications_data = publications_data.drop_duplicates(subset = 'paper_id')
+publications_data = publications_data[
+    ['paper_id', 'title', 'ak_keywords', 'full_text']
+    ].reset_index(drop=True)
+
+```
+
+## Fit model to data and visualize
+
+We will now do "Latent Dirichlet Allocation" (LDA) on the text data.
+
+First, we specify how many unique topics we expect there to be across all articles (we chose 15 topics). We also transform the text data into word counts for analysis. LDA takes this count data and returns, for each article, a probability distribution over all topics.
+
+We then visualize the output using the `pyLDAvis` package.  The output of this is javascript, which we can view using Wrattler's `addOutput` function.
+If you click on the "output" tab once the cell has finished running (note that this may take some time!) you should get the interactive visualization.
+
+
+```python
+
+import os
+os.system("pip3 install pyLDAvis")
+
+import pyLDAvis
+import pyLDAvis.sklearn
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+
+N_TOPICS = 15
+
+vectorizer = CountVectorizer(max_df=0.95, min_df=2)
+dtm = vectorizer.fit_transform(publications_data['full_text'].values.astype('U'))
+feature_names = vectorizer.get_feature_names()
+
+# fit model
+lda = LatentDirichletAllocation(n_components = N_TOPICS,  max_iter = 50,
+                            learning_method = 'online', random_state = 0)
+lda.fit(dtm)
+
+topic_term_dists = lda.components_ / lda.components_.sum(axis=1)[:, None]
+doc_topic_dists = lda.transform(dtm)
+
+prepared_data = pyLDAvis.sklearn.prepare(lda, dtm, vectorizer)
+addOutput(pyLDAvis.prepared_data_to_html(prepared_data))
+```
+
+
+## Topic labeling
+
+For now, each topic has a number, it is described as a distribution over the vocabulary (with some top words per topic) and it has associated articles.
+We need to interpret this information and assign a label to each topic.
+
+To do that we look at:
+1. The top words per topic
+2. The top articles per topic (specifically their titles and associated keywords)
+
+Below we show this information for the first five topics. Based on this, we could for example conclude that topic 2 is analysis of financial markets data. Some topics are easier to interpret than others.
+
+```python
+
+def _top(df, col):
+    return df.sort_values(col, ascending=False).index
+
+def top_terms(topic, n=10):
+    """
+    Gets indexes of n top topic terms and returns the terms (retrieved from feature_names).
+    """
+    word_idx = _top(topic_term_dists.T, topic)[0:n]
+    return [feature_names.iloc[int(idx)][0] for idx in word_idx]
+
+def top_docs(topic, info, n=5):
+    """
+    Gets n top documents associated with topic and returns info (e.g., title).
+    """
+    doc_idx = _top(doc_topic_dists, str(topic))[0:n]
+    return publications_data.loc[doc_idx, info]
+
+for i in range(5):
+  print("TOPIC " + str(i))
+  print("Top terms:")
+  print(top_terms(i))
+  print("Top article titles:")
+  print(top_docs(i, 'title').to_list())
+  print("Top article keywords:")
+  print(top_docs(i, 'ak_keywords').to_list())
+  print("")
+```
+
+
+
+## Top topics by researcher
+
+Finally, we want to know the average topic distribution for each researcher. For each document, we have a distribution of topics in that document. We also know what researchers are associated with what document. We just need to combine this information.
+
+The `author_topic_dists` table shows the percentage of each topic contained in the articles of each author. From this we can see, for example, that of the five authors Tobias Preis published the most on topic 2 (the topics are numbered 0-14).
+
+```python
+import pandas as pd
+import numpy as np
+
+# for each document, combine doc-topic distribution with paper_id
+# for each author, get percentage of each topic in their articles
+doc_topic_dists.set_index(publications_data['paper_id'], inplace=True)
+author_topic_dists = doc_topic_dists.merge(
+    author_info[['paper_id', 'name']],
+    left_index=True,
+    right_on='paper_id'
+    )
+
+author_topic_dists = (author_topic_dists.loc[:, author_topic_dists.columns != 'paper_id'
+    ].groupby('name').mean().replace(np.nan, 0)*100).T
+
+```

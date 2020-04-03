@@ -1,0 +1,70 @@
+<div style="max-width:700px">
+
+# Welcome to Wrattler!
+
+This document gives a brief overview of the different sample notebooks that 
+are available as part of the Wrattler demo. If you are new to Wrattler, then
+it's best to follow them in order. That way, you will learn how to use Wrattler
+before moving to more interesting examples. If you already know Wrattler, you
+can jump to the mroe interesting ones. You can also open `news.wrattler`, which 
+is a mirror of our [progress page](https://github.com/wrattler/wrattler/wiki/Wrattler-project-progress)
+and documents the recent work on Wrattler.
+
+### Evaluation and dependencies 
+
+- `welcome.wrattler` - This notebook introduces Wrattler. It shows how Wrattler uses
+  dependency tracking to make sure your results are never out-of-date and how
+  to create various kinds of cells, pass data between them and create JavaScript
+  visualizations.
+
+- `dependencies.wrattler` - In this notebook, we look at the dependency graph in more
+  detail. We create a sample notebook with dependencies between R, Python and JavaScript
+  and we use Wrattler's dependency graph visualizer to see what the dependency graph looks like.
+
+
+### Visualization and JavaScript
+
+- `charts.wrattler` - This example gives an overview of data visualization tools accessible
+  from Wrattler. Those include matplotlib in Python, ggplot in R and a variety of JavaScript
+  libraries - here we use a popular simple library Plotly.
+
+- `jstools.wrattler` - This notebook shows the flexibility of Wrattler. It loads a simple
+  tool (available in `fullscreen.js` in the `resources` folder), which lets us create
+  full-screen data visualization.
+
+- `maps.wrattler` - In this example, we import the Leaflet.js libary for creating maps and
+  we create a simple map of London with The Alan Turing Institute. This also works nicely
+  with the above tool, letting us create large nice maps. 
+
+### Loading sample data
+
+- `rdata.wrattler` - If you want to play with Wrattler, you will need some sample data. One
+  of the easiest ways of loading data is to use sample datasets from R, all of which are
+  easily accessible not just in R, but in any language.
+
+- `pydata.wrattler` - For more interesting datasets, you can look at CSV files available online.
+   The easiest way to get them into Wrattler is to use the Pandas library, which can load 
+   data from a URL.
+
+### AI assistants
+
+- `aiassistants.wrattler` - Data wrangling constitute 80\% of typical data engineering work.
+  This notebook demonstrates AI assistants, semi-automatic interactive tools to streamline
+  data wrangling tasks such as merging data, removing outliers and inferring data types.
+  
+### Organizing code
+
+- `imports.wrattler` - Having large blocks of code in a notebook is inconvenient and a bad 
+  software engineering practice. Wrattler lets you organize code using files. This example
+  shows how to put helper functions into separate files and load them.
+
+
+### Sample data analyses
+
+- `scenic-analysis.wrattler` - The Broken Window hypothesis proposes that visible signs of crime
+  and civil disorder creates an environment that encourages further crime and disorder.
+  In this notebook, we study the relationship between crime rates and scenicness in areas across London, 
+  as well as accounting for other indices of deprivation.
+
+
+</div>

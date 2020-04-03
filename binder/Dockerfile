@@ -47,8 +47,8 @@ WORKDIR ${HOME}/binder
 
 # Use SVN(!) to get the resources directory from github
 #RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
-RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/resources
-RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/ai-assistants/demo_27022020
+RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/resources
+RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/examples
 
 # Link the resources directory to somewhere accessible to the client,
 # so that it can serve e.g. python or .R files containing definitions.

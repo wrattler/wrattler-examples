@@ -8,6 +8,8 @@ Perhaps the most notable application of the theory was the adoption of the *stop
 Whilst application of such policies have been linked to decline in crime rates, great skeptism surrounds the validity of such a relationship
 because of other changes taking place at that time, including the number of police officers, periods of economic growth and a reduction in poverty.
 
+<br>
+
 We wish to study the relationship between crime rates and scenicness in areas across London, while controlling for other factors that could be linked with crimes, such as income and employment deprivation and population density.
 Specifically, we want to test the hypothesis that less scenic areas will be linked to higher rates of crimes.
 In this notebook we,
@@ -158,6 +160,8 @@ crime_subset_df = df[df["crime_category"] == "total_count"]
 Having loaded the data, we're first going to build a javascript visualisation using `d3` and `leaflet js` to qualitatively see whether there might be a relationship between crime counts and scenicness,
 as well as inspect the measures of deprivation across different LSOA codes.
 Here, we invert the indices of deprivation so that when shown on the plot in the form of scale bars, fuller bars indicate less deprivation.
+
+<br>
 
 To do this, we also load data containing coordinates of LSOA boundaries so we can visually separate them on the leaflet map, as well as data containing
 ratings of scenicness for specific points in the map (as opposed to an average rating for an entire LSOA).
@@ -535,6 +539,7 @@ The four colours in the below plots hence represent different ranges of percenti
 
 ```r
 install.packages("reshape2")
+install.packages("mltools")
 library(reshape2)
 library(ggplot2)
 library(mltools)
@@ -617,6 +622,8 @@ If the rate of the event changes from one observation to the next, we assume tha
 In the present analysis, we can specify each of the indices of deprivation, scenicness and population density as predictor variables of the overall crime count,
 and by including these within one model, we are able to test the effect of each on the number of crimes in an LSOA whilst controlling for the other predictors.
 
+<br>
+
 The Poisson distribution models the probability of events occurring within a specific timeframe,
 assuming that occurrences are not affected by the timing of previous events.
 Additionally, since Possion distributed data is intrinsically integer-valued, Poisson regression models, are commonly used to model count data.
@@ -630,6 +637,8 @@ One potential drawback of Poisson regression is that it may not accurately descr
 This is because the mean and variance of the Poisson distribution are assumed to be the same, which is often violated by real world data where the observed variance is usually larger than its mean.
 This is referred to as *overdispersion*.
 
+<br>
+
 The negative binomial regression model does not make this *mean == variance* assumption about the data.
 Like the Poisson distribution, the negative binomial distribution describes the probabilities of the occurrence of whole numbers greater than or equal to 0.
 However, the variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
@@ -638,6 +647,8 @@ This makes negative binomial regression a good alternative to Poisson regression
 </div>
 
 ```r
+install.packages("https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.4-4.tar.gz", repos=NULL, type="source")
+install.packages("AER")
 library(AER)
 
 # Run Poisson model with scenic rating only
@@ -678,6 +689,8 @@ By controlling for important covariates, we can obtain more precise estimates of
 We have specifically chosen to also include population density and indices of deprivation (relating to a range of factors including health, education, income, and housing) for a LSOA as other predictors,
 as these are variables which one might intuitively assume would also be influencing the crime rate.
 For example, it might not be surprising that a high population density relates to higher rates of crime, and so we control for population density by including it as a variable within the model.
+
+<br>
 
 Above we run three Poisson regression models:
 * `scenic_only_model` - model containing scenic rating only, with no other predictor variables

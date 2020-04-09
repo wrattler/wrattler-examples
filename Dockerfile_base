@@ -27,7 +27,7 @@ ENV LC_ALL en_GB.UTF-8
 
 RUN pip3 install --upgrade pip
 RUN pip3 install wrattler-python-service==0.7
-RUN pip3 install wrattler-data-store==0.5.1
+RUN pip3 install wrattler-data-store==0.5.2
 
 ## Client dependencies
 RUN apt-get install -y curl

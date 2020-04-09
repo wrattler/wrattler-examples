@@ -6,4 +6,5 @@ __pycache__/
 # emacs autosave files
 *~
 *.ipynb
-*/.ipynb_checkpoints
+examples/.ipynb_checkpoints
+resources/.ipynb_checkpoints

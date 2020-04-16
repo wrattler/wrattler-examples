@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.7
+FROM wrattler/wrattler_base:v0.8
 
 RUN apt-get update; apt-get install -y python-gi-cairo
 RUN pip3 install --no-cache-dir notebook==5.*
@@ -30,7 +30,9 @@ ENV JUPYTERLAB_DIR /home/jovyan/.jupyter/lab/applications
 
 WORKDIR ${HOME}
 ## Checkout Wrattler and switch to branch with AI-assistants
-RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
+RUN git clone https://github.com/wrattler/wrattler
+# (if we need to checkout a specific branch, for development, do as below)
+#RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
 
 # AI assistants
 ENV DATASTORE_URI http://localhost:7102
@@ -46,9 +48,12 @@ RUN cd wrattler/jupyterlab_wrattler; yarn install; jupyter labextension link .; 
 WORKDIR ${HOME}/binder
 
 # Use SVN(!) to get the resources directory from github
-#RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
-RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/resources
-RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/examples
+RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/resources
+RUN svn checkout https://github.com/wrattler/wrattler-examples/trunk/examples
+
+## (if we needed to get specific branch for development purposes, do as below)
+#RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/resources
+#RUN svn checkout https://github.com/wrattler/wrattler-examples/branches/feature/consolidate-examples/examples
 
 # Link the resources directory to somewhere accessible to the client,
 # so that it can serve e.g. python or .R files containing definitions.

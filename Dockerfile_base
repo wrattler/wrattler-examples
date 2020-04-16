@@ -57,7 +57,9 @@ RUN a2enmod dav dav_svn
 RUN service apache2 restart
 
 ## Checkout Wrattler and switch to branch with AI-assistants
-RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
+RUN git clone https://github.com/wrattler/wrattler
+# (if we need to checkout a specific branch, for development purposes, do it as below)
+#RUN git clone https://github.com/wrattler/wrattler; cd wrattler; git checkout develop; cd -;
 
 # Client
 RUN cd wrattler/client; yarn; yarn build; cp build/wrattler-app.js public/; cd -

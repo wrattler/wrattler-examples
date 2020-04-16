@@ -1,4 +1,4 @@
-FROM wrattler/wrattler_base:v0.5
+FROM wrattler/wrattler_base:v0.8
 
 # install AI assistants here to avoid clash (permissions) with binder version
 # AI assistants
